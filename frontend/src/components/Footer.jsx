@@ -1,52 +1,113 @@
 import React from 'react';
-import { Landmark, Mail, Phone, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Landmark, Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-950 border-t border-slate-900 mt-auto py-8 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Info Column */}
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2 text-emerald-400 font-bold text-lg">
-            <Landmark className="h-5 w-5" />
-            <span>Smart Panchayat System</span>
+    <footer style={{
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)',
+      color: '#94a3b8',
+      paddingTop: '3rem',
+      paddingBottom: '1.5rem',
+      marginTop: 'auto'
+    }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2.5rem', paddingBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          
+          {/* Brand */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+                borderRadius: '10px', width: 36, height: 36,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(37,99,235,0.4)'
+              }}>
+                <Landmark size={18} color="#fff" />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#fff' }}>Smart Panchayat</div>
+                <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Welfare Portal</div>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.82rem', lineHeight: 1.7, margin: 0, color: '#64748b' }}>
+              A centralized digital platform to access Panchayat welfare schemes, eligibility checks, and official notices.
+            </p>
           </div>
-          <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-            Empowering rural communities through digital governance, enabling transparent distribution of agricultural subsidies, housing schemes, animal husbandry benefits, and direct forms download.
+
+          {/* Quick Links */}
+          <div>
+            <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.875rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Quick Links
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+              {[
+                { to: '/', label: 'Home' },
+                { to: '/schemes', label: 'Welfare Schemes' },
+                { to: '/announcements', label: 'Notices & Circulars' },
+                { to: '/register', label: 'Register as Citizen' },
+              ].map(({ to, label }) => (
+                <Link key={to} to={to} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500, transition: 'color 0.2s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#93c5fd'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.875rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Contact
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {[
+                { icon: MapPin, text: 'Panchayat Office, Kerala - 685001' },
+                { icon: Phone, text: '+91 484 000 0000' },
+                { icon: Mail, text: 'secretary@panchayat.gov.in' },
+              ].map(({ icon: Icon, text }, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem' }}>
+                  <Icon size={14} color="#3b82f6" style={{ marginTop: '2px', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.82rem', color: '#64748b', lineHeight: 1.5 }}>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Government Links */}
+          <div>
+            <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.875rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Government Portals
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+              {[
+                { href: 'https://kerala.gov.in', label: 'Kerala Government' },
+                { href: 'https://lsgkerala.gov.in', label: 'LSG Kerala' },
+                { href: 'https://pmayg.nic.in', label: 'PMAY Gramin' },
+              ].map(({ href, label }) => (
+                <a key={href} href={href} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 500, transition: 'color 0.2s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#93c5fd'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                >
+                  {label} <ExternalLink size={11} />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '1.25rem', gap: '1rem', flexWrap: 'wrap' }}>
+          <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569' }}>
+            © {new Date().getFullYear()} Smart Panchayat Welfare Portal. All rights reserved.
+          </p>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#334155' }}>
+            A Digital Initiative under Kerala Panchayat Act 1994
           </p>
         </div>
-
-        {/* Contact Column */}
-        <div className="space-y-3">
-          <h3 className="text-slate-200 font-semibold text-sm uppercase tracking-wider">Contact Office</h3>
-          <ul className="space-y-2 text-sm text-slate-400">
-            <li className="flex items-center space-x-2">
-              <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>Main Panchayat Office, Ward 4, District HQ</span>
-            </li>
-            <li className="flex items-center space-x-2">
-              <Phone className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>+91 98765 43210</span>
-            </li>
-            <li className="flex items-center space-x-2">
-              <Mail className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>helpdesk@panchayat.gov</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Quick Guidelines */}
-        <div className="space-y-3">
-          <h3 className="text-slate-200 font-semibold text-sm uppercase tracking-wider">Citizens Guidelines</h3>
-          <p className="text-sm text-slate-400 leading-relaxed">
-            Please update your profile details under the 'Profile' section including age, annual income, occupation, and category. The portal uses these parameters to verify your eligibility for various welfare schemes.
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto border-t border-slate-900 mt-8 pt-4 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500">
-        <p>&copy; {new Date().getFullYear()} Smart Panchayat Information System. All Rights Reserved.</p>
-        <p className="mt-2 md:mt-0">Designed for rural e-Governance and transparency.</p>
       </div>
     </footer>
   );
