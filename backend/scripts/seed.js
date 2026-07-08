@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const User = require('../models/User');
 const Scheme = require('../models/Scheme');
 const Announcement = require('../models/Announcement');
+const Application = require('../models/Application');
 
 // Load environment variables
 dotenv.config();
@@ -13,14 +14,21 @@ const seedData = async () => {
   
   try {
     console.log('Connecting to database for seeding...');
-    await mongoose.connect(MONGO_URI);
-    console.log('Connected to database.');
+    try {
+      await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 2000 });
+      console.log('Connected to MongoDB database.');
+    } catch (err) {
+      console.warn('\n======================================================');
+      console.warn('MongoDB offline. Seeding local JSON fallback database instead.');
+      console.warn('======================================================\n');
+    }
 
     // Clear existing data
     console.log('Clearing existing data...');
     await User.deleteMany({});
     await Scheme.deleteMany({});
     await Announcement.deleteMany({});
+    await Application.deleteMany({});
 
     // Create Admin User
     console.log('Seeding Admin account...');

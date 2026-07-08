@@ -40,6 +40,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/schemes', require('./routes/schemeRoutes'));
 app.use('/api/announcements', require('./routes/announcementRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/applications', require('./routes/applicationRoutes'));
 
 // Status Route
 app.get('/api/status', (req, res) => {

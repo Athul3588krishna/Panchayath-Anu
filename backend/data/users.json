@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "tk8mgmyoi",
+    "createdAt": "2026-07-08T18:35:32.586Z",
+    "name": "Panchayat Secretary",
+    "email": "admin@panchayat.gov",
+    "password": "$2a$10$eELi5uPMJsYpCtjl/VQ/W.h3iHBDIVGasThsAaFqckB0t00NuJDAG",
+    "role": "admin",
+    "age": 45,
+    "annualIncome": 450000,
+    "occupation": "Government Service",
+    "category": "General"
+  },
+  {
+    "_id": "oyt9hrdt4",
+    "createdAt": "2026-07-08T18:35:32.668Z",
+    "name": "Rajesh Kumar",
+    "email": "citizen@test.com",
+    "password": "$2a$10$hRd/5OKWMpVKNR5/cTEtiOOLtXSN4wFhpY5y7vWriVPt5Ty2ct5Oa",
+    "role": "citizen",
+    "age": 35,
+    "annualIncome": 45000,
+    "occupation": "Farmer",
+    "category": "OBC"
+  },
+  {
+    "_id": "u308lqto2",
+    "createdAt": "2026-07-08T18:35:32.750Z",
+    "name": "Sheela Devi",
+    "email": "sheela@test.com",
+    "password": "$2a$10$hRd/5OKWMpVKNR5/cTEtiOm52M0OhT.MCHlDU7UbiFXSYtlf2THjm",
+    "role": "citizen",
+    "age": 25,
+    "annualIncome": 12000,
+    "occupation": "Unemployed",
+    "category": "SC"
+  }
+]
