@@ -55,7 +55,8 @@ const createScheme = async (req, res) => {
     category,
     eligibilityCriteria,
     requiredDocuments,
-    formUrl
+    formUrl,
+    expiresAt
   } = req.body;
 
   try {
@@ -71,7 +72,8 @@ const createScheme = async (req, res) => {
         allowedCategories: eligibilityCriteria?.allowedCategories || []
       },
       requiredDocuments: requiredDocuments || [],
-      formUrl: formUrl || ''
+      formUrl: formUrl || '',
+      expiresAt: expiresAt ? new Date(expiresAt) : null
     });
 
     const createdScheme = await scheme.save();
@@ -91,7 +93,8 @@ const updateScheme = async (req, res) => {
     category,
     eligibilityCriteria,
     requiredDocuments,
-    formUrl
+    formUrl,
+    expiresAt
   } = req.body;
 
   try {
@@ -114,6 +117,10 @@ const updateScheme = async (req, res) => {
 
       scheme.requiredDocuments = requiredDocuments || scheme.requiredDocuments;
       scheme.formUrl = formUrl !== undefined ? formUrl : scheme.formUrl;
+      // Update expiresAt: allow setting to null (clear deadline) or a new date
+      if (expiresAt !== undefined) {
+        scheme.expiresAt = expiresAt ? new Date(expiresAt) : null;
+      }
 
       const updatedScheme = await scheme.save();
       res.json(updatedScheme);
@@ -229,7 +236,8 @@ const checkEligibility = async (req, res) => {
           title: scheme.title,
           category: scheme.category,
           description: scheme.description,
-          formUrl: scheme.formUrl
+          formUrl: scheme.formUrl,
+          expiresAt: scheme.expiresAt
         },
         isEligible,
         reasons

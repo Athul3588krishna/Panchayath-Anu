@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { User, Mail, AlertCircle, Save, CheckCircle, Award, Calendar, FileText, Clock, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { User, Mail, AlertCircle, Save, CheckCircle, Award, Calendar, FileText, Clock, ThumbsUp, ThumbsDown, CalendarCheck, CalendarPlus } from 'lucide-react';
 import { API_BASE_URL } from '../context/AuthContext';
 
 const Profile = () => {
@@ -26,6 +27,10 @@ const Profile = () => {
   // Online Applications State
   const [applications, setApplications] = useState([]);
   const [appsLoading, setAppsLoading] = useState(true);
+
+  // Appointments State
+  const [appointments, setAppointments] = useState([]);
+  const [apptsLoading, setApptsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -90,6 +95,22 @@ const Profile = () => {
   useEffect(() => {
     fetchMyApplications();
   }, [token]);
+
+  // Fetch citizen appointments
+  useEffect(() => {
+    if (!token) { setApptsLoading(false); return; }
+    const fetchMyAppointments = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/appointments/my`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) { const data = await res.json(); setAppointments(data); }
+      } catch (err) { console.error('Error fetching appointments:', err); }
+      finally { setApptsLoading(false); }
+    };
+    fetchMyAppointments();
+  }, [token]);
+
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -429,6 +450,70 @@ const Profile = () => {
         </div>
 
       </div>
+
+        {/* ── MY APPOINTMENTS ── */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <CalendarCheck size={18} color="#2563eb" />
+              {language === 'ml' ? 'എന്റെ അപ്പോയ്‌ന്റ്‌മെന്റുകൾ' : 'My Appointments'}
+            </h3>
+            <Link to="/book-appointment" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: '10px', background: 'linear-gradient(135deg,#2563eb,#4f46e5)', color: '#fff', fontWeight: 700, textDecoration: 'none', fontSize: '0.8rem', boxShadow: '0 3px 10px rgba(37,99,235,0.25)' }}>
+              <CalendarPlus size={14} />
+              {language === 'ml' ? 'ബുക്ക് ചെയ്യൂ' : 'Book Appointment'}
+            </Link>
+          </div>
+          <p style={{ color: '#64748b', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
+            {language === 'ml'
+              ? 'രേഖ പരിശോധനയ്ക്കോ ആനുകൂല്യ അന്വേഷണത്തിനോ ഒരു ഓഫീസ് സ്ലോട്ട് ബുക്ക് ചെയ്ത് നില ഇവിടെ പരിശോധിക്കൂ.'
+              : 'Office slots booked for document verification or scheme enquiries appear here.'}
+          </p>
+          {apptsLoading ? (
+            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '1.5rem', fontSize: '0.85rem' }}>
+              {language === 'ml' ? 'ലോഡ് ചെയ്യുന്നു...' : 'Loading appointments...'}
+            </p>
+          ) : appointments.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <CalendarCheck size={32} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
+              <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>
+                {language === 'ml' ? 'ഇതുവരെ ഒരു അപ്പോയ്‌ന്റ്‌മെന്റും ബുക്ക് ചെയ്തിട്ടില്ല.' : 'No appointments booked yet.'}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {appointments.map((appt) => {
+                const statusStyle = {
+                  Confirmed: { bg: '#dcfce7', color: '#15803d', border: '#bbf7d0' },
+                  Cancelled: { bg: '#fee2e2', color: '#b91c1c', border: '#fecaca' },
+                  Pending:   { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' }
+                }[appt.status] || { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' };
+
+                return (
+                  <div key={appt._id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem 1.25rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>
+                          📅 {new Date(appt.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                        </span>
+                        <span style={{ fontSize: '0.82rem', color: '#64748b' }}>· {appt.timeSlot}</span>
+                      </div>
+                      <p style={{ margin: '0 0 0.25rem', fontSize: '0.82rem', color: '#475569' }}>{appt.purpose}</p>
+                      {appt.adminNote && (
+                        <p style={{ margin: 0, fontSize: '0.78rem', color: '#7c3aed', fontWeight: 600 }}>
+                          {language === 'ml' ? 'ഓഫീസ് കുറിപ്പ്:' : 'Office Note:'} {appt.adminNote}
+                        </p>
+                      )}
+                    </div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}`, borderRadius: '999px', padding: '0.3rem 0.8rem', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', flexShrink: 0 }}>
+                      {appt.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
     </div>
   );
 };

@@ -54,6 +54,10 @@ const SchemeSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  expiresAt: {
+    type: Date,
+    default: null // null = no expiry / always open
+  },
   createdAt: {
     type: Date,
     default: Date.now

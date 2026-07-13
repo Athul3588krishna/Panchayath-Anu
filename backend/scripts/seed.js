@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Scheme = require('../models/Scheme');
 const Announcement = require('../models/Announcement');
 const Application = require('../models/Application');
+const Appointment = require('../models/Appointment');
 
 // Load environment variables
 dotenv.config();
@@ -29,6 +30,7 @@ const seedData = async () => {
     await Scheme.deleteMany({});
     await Announcement.deleteMany({});
     await Application.deleteMany({});
+    await Appointment.deleteMany({});
 
     // Create Admin User
     console.log('Seeding Admin account...');
@@ -92,7 +94,8 @@ const seedData = async () => {
         requiredDocuments: ['Aadhar Card', 'Income Certificate', 'Land Ownership or Lease Agreement', 'Bank Passbook Details'],
         formUrl: '',
         viewsCount: 142,
-        downloadsCount: 38
+        downloadsCount: 38,
+        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) // expires in 5 days
       },
       {
         title: 'BPL Goat Farming Subsidy',
@@ -108,7 +111,8 @@ const seedData = async () => {
         requiredDocuments: ['Aadhar Card', 'BPL Ration Card', 'Caste Certificate', 'Panchayat Residence Certificate'],
         formUrl: '',
         viewsCount: 205,
-        downloadsCount: 64
+        downloadsCount: 64,
+        expiresAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000) // expires in 20 days
       },
       {
         title: 'Organic Farming & Vermicompost Subsidies',
@@ -124,7 +128,8 @@ const seedData = async () => {
         requiredDocuments: ['Aadhar Card', 'Land Tax Receipt', 'Farmer ID Card', 'Bank Passbook Details'],
         formUrl: '',
         viewsCount: 97,
-        downloadsCount: 19
+        downloadsCount: 19,
+        expiresAt: null // Always open
       },
       {
         title: 'Free Saplings and Plant Distribution Drive',
@@ -140,7 +145,8 @@ const seedData = async () => {
         requiredDocuments: ['Aadhar Card', 'Land Possession Certificate (Optional)'],
         formUrl: '',
         viewsCount: 78,
-        downloadsCount: 5
+        downloadsCount: 5,
+        expiresAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // EXPIRED 2 days ago
       },
       {
         title: 'Panchayat Rural Housing Scheme (PMAY-G)',
@@ -156,7 +162,8 @@ const seedData = async () => {
         requiredDocuments: ['Aadhar Card', 'Income Certificate', 'Ration Card (BPL)', 'Photo of existing dilapidated shelter', 'Job Card Number'],
         formUrl: '',
         viewsCount: 310,
-        downloadsCount: 112
+        downloadsCount: 112,
+        expiresAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000) // expires in 45 days
       },
       {
         title: 'Panchayat Higher Education Merit Scholarship',
@@ -172,7 +179,8 @@ const seedData = async () => {
         requiredDocuments: ['Aadhar Card', 'Income Certificate', 'Class 10/12 Marksheet', 'College Admission Proof'],
         formUrl: '',
         viewsCount: 184,
-        downloadsCount: 45
+        downloadsCount: 45,
+        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // expires in 3 days (urgency!)
       }
     ];
 

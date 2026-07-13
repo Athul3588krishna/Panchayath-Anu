@@ -1,325 +1,373 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
-import { ShieldCheck, Users, BookOpen, Bell, Download, Award, FileText, CheckCircle, Clock, ThumbsUp, ThumbsDown, Edit2, Check, X } from 'lucide-react';
+import { ShieldCheck, Users, BookOpen, Bell, FileText, CheckCircle, Clock, ThumbsUp, ThumbsDown, Edit2, Check, X, CalendarCheck, TrendingUp, PieChart as PieIcon, BarChart2 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+  LineChart, Line
+} from 'recharts';
+
+const COLORS = ['#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed', '#0891b2'];
 
 const Dashboard = () => {
   const { token } = useAuth();
-  const [stats, setStats] = useState({
-    citizensCount: 0,
-    schemesCount: 0,
-    announcementsCount: 0,
-    applicationsCount: 0
-  });
-  const [schemes, setSchemes] = useState([]);
-  
-  // Applications management state
+  const [stats, setStats] = useState({ citizensCount: 0, schemesCount: 0, announcementsCount: 0, applicationsCount: 0, appointmentsCount: 0 });
   const [applications, setApplications] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [appsLoading, setAppsLoading] = useState(true);
+  const [apptLoading, setApptLoading] = useState(true);
   const [editingAppId, setEditingAppId] = useState(null);
   const [editStatus, setEditStatus] = useState('');
   const [editRemarks, setEditRemarks] = useState('');
-
+  const [editingApptId, setEditingApptId] = useState(null);
+  const [editApptStatus, setEditApptStatus] = useState('');
+  const [editApptNote, setEditApptNote] = useState('');
   const [loading, setLoading] = useState(true);
-  const [feedbackSuccess, setFeedbackSuccess] = useState('');
-  const [feedbackError, setFeedbackError] = useState('');
+  const [feedback, setFeedback] = useState({ type: '', text: '' });
 
-  const fetchAdminStats = async () => {
+  // Chart data
+  const [appsByScheme, setAppsByScheme] = useState([]);
+  const [appsByStatus, setAppsByStatus] = useState([]);
+  const [registrationsByMonth, setRegistrationsByMonth] = useState([]);
+
+  const fetchAll = async () => {
     try {
-      // Fetch users
-      const usersRes = await fetch(`${API_BASE_URL}/auth/users`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const users = await usersRes.json();
-      const citizens = users.filter(u => u.role === 'citizen').length;
+      const [usersRes, schemesRes, noticesRes, appsRes, apptsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/auth/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/schemes`),
+        fetch(`${API_BASE_URL}/announcements`),
+        fetch(`${API_BASE_URL}/applications`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/appointments`, { headers: { 'Authorization': `Bearer ${token}` } })
+      ]);
 
-      // Fetch schemes
-      const schemesRes = await fetch(`${API_BASE_URL}/schemes`);
-      const schemesData = await schemesRes.json();
-      setSchemes(schemesData);
+      const users = usersRes.ok ? await usersRes.json() : [];
+      const schemes = schemesRes.ok ? await schemesRes.json() : [];
+      const notices = noticesRes.ok ? await noticesRes.json() : [];
+      const apps = appsRes.ok ? await appsRes.json() : [];
+      const appts = apptsRes.ok ? await apptsRes.json() : [];
 
-      // Fetch notices
-      const noticesRes = await fetch(`${API_BASE_URL}/announcements`);
-      const notices = await noticesRes.json();
-
-      // Fetch all applications
-      const appsRes = await fetch(`${API_BASE_URL}/applications`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const apps = await appsRes.json();
+      const citizens = users.filter(u => u.role === 'citizen');
       setApplications(apps);
-      setAppsLoading(false);
+      setAppointments(appts);
 
       setStats({
-        citizensCount: citizens,
-        schemesCount: schemesData.length,
+        citizensCount: citizens.length,
+        schemesCount: schemes.length,
         announcementsCount: notices.length,
-        applicationsCount: apps.length
+        applicationsCount: apps.length,
+        appointmentsCount: appts.length
       });
+
+      // ── Chart Data Processing ──────────────────────────────────
+
+      // 1) Bar chart: applications per scheme
+      const schemeCounts = {};
+      apps.forEach(app => {
+        const name = app.scheme?.title || 'Unknown';
+        const short = name.length > 20 ? name.slice(0, 18) + '…' : name;
+        schemeCounts[short] = (schemeCounts[short] || 0) + 1;
+      });
+      setAppsByScheme(Object.entries(schemeCounts).map(([name, count]) => ({ name, Applications: count })));
+
+      // 2) Pie chart: status distribution
+      const statusCounts = { Pending: 0, 'Under Review': 0, Approved: 0, Rejected: 0 };
+      apps.forEach(app => { if (statusCounts[app.status] !== undefined) statusCounts[app.status]++; });
+      setAppsByStatus(Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
+
+      // 3) Line chart: citizen registrations by month
+      const monthCounts = {};
+      citizens.forEach(u => {
+        const d = new Date(u.createdAt || Date.now());
+        const key = d.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
+        monthCounts[key] = (monthCounts[key] || 0) + 1;
+      });
+      const sorted = Object.entries(monthCounts).map(([month, count]) => ({ month, Citizens: count }));
+      setRegistrationsByMonth(sorted.length > 0 ? sorted : [{ month: 'Now', Citizens: citizens.length }]);
+
     } catch (err) {
-      console.error('Error fetching admin dashboard stats:', err);
+      console.error('Dashboard fetch error:', err);
     } finally {
       setLoading(false);
+      setAppsLoading(false);
+      setApptLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchAdminStats();
-  }, [token]);
+  useEffect(() => { fetchAll(); }, [token]);
 
-  // Handle application status update
-  const handleUpdateStatus = async (appId) => {
-    setFeedbackSuccess('');
-    setFeedbackError('');
+  const handleUpdateAppStatus = async (appId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/applications/${appId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          status: editStatus,
-          remarks: editRemarks
-        })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ status: editStatus, remarks: editRemarks })
       });
-
-      if (res.ok) {
-        setFeedbackSuccess('Application status updated successfully!');
-        setEditingAppId(null);
-        fetchAdminStats();
-      } else {
-        setFeedbackError('Failed to update status.');
-      }
-    } catch (err) {
-      setFeedbackError('Error connecting to backend.');
-    }
+      if (res.ok) { setFeedback({ type: 'success', text: 'Application status updated.' }); setEditingAppId(null); fetchAll(); }
+      else setFeedback({ type: 'error', text: 'Update failed.' });
+    } catch (e) { setFeedback({ type: 'error', text: 'Network error.' }); }
   };
 
-  const startEditing = (app) => {
-    setEditingAppId(app._id);
-    setEditStatus(app.status);
-    setEditRemarks(app.remarks || '');
+  const handleUpdateApptStatus = async (apptId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/appointments/${apptId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ status: editApptStatus, adminNote: editApptNote })
+      });
+      if (res.ok) { setFeedback({ type: 'success', text: 'Appointment updated.' }); setEditingApptId(null); fetchAll(); }
+      else setFeedback({ type: 'error', text: 'Update failed.' });
+    } catch (e) { setFeedback({ type: 'error', text: 'Network error.' }); }
+  };
+
+  const statusBadge = (status) => {
+    const map = {
+      'Approved':     { bg: '#dcfce7', color: '#15803d', border: '#bbf7d0', icon: <ThumbsUp size={11} /> },
+      'Rejected':     { bg: '#fee2e2', color: '#b91c1c', border: '#fecaca', icon: <ThumbsDown size={11} /> },
+      'Under Review': { bg: '#fef9c3', color: '#a16207', border: '#fde68a', icon: <Clock size={11} /> },
+      'Confirmed':    { bg: '#dcfce7', color: '#15803d', border: '#bbf7d0', icon: <CheckCircle size={11} /> },
+      'Cancelled':    { bg: '#fee2e2', color: '#b91c1c', border: '#fecaca', icon: <X size={11} /> },
+      'Pending':      { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0', icon: <Clock size={11} /> },
+    };
+    const s = map[status] || map['Pending'];
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: s.bg, color: s.color, border: `1px solid ${s.border}`, borderRadius: '999px', padding: '0.22rem 0.65rem', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase' }}>
+        {s.icon} {status}
+      </span>
+    );
   };
 
   const adminModules = [
-    { title: 'Welfare Schemes', desc: 'Create, update, or remove schemes & set criteria.', link: '/admin/schemes', icon: BookOpen, color: 'text-emerald-400' },
-    { title: 'Publish Notices', desc: 'Post circulars, warnings, and announcements.', link: '/admin/announcements', icon: Bell, color: 'text-sky-400' },
-    { title: 'User Directory', desc: 'Monitor registered citizens and edit eligibility profiles.', link: '/admin/users', icon: Users, color: 'text-violet-400' },
-    { title: 'Analytics Reports', desc: 'Generate CSV/PDF summaries of views & form downloads.', link: '/admin/reports', icon: FileText, color: 'text-amber-400' }
+    { title: 'Welfare Schemes', desc: 'Manage schemes, criteria, and deadlines.', link: '/admin/schemes', icon: BookOpen, color: '#2563eb', bg: '#dbeafe' },
+    { title: 'Publish Notices', desc: 'Post circulars and announcements.', link: '/admin/announcements', icon: Bell, color: '#7c3aed', bg: '#ede9fe' },
+    { title: 'User Directory', desc: 'Manage registered citizens.', link: '/admin/users', icon: Users, color: '#d97706', bg: '#fef9c3' },
+    { title: 'Export Reports', desc: 'Download CSV/analytics reports.', link: '/admin/reports', icon: FileText, color: '#0891b2', bg: '#e0f2fe' },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-8 animate-in fade-in duration-300">
-      
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem' }}>
+
       {/* Header */}
-      <div className="flex items-center space-x-3">
-        <div className="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 text-amber-400">
-          <ShieldCheck className="h-6 w-6" />
+      <div style={{ marginBottom: '1.75rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        <div style={{ background: '#fef9c3', border: '1px solid #fde68a', borderRadius: '12px', padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ShieldCheck size={22} color="#d97706" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white">Administrator Dashboard</h1>
-          <p className="text-slate-400 text-sm">Centralized administration for Smart Panchayat schemes, notices, and citizen submissions.</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Administrator Dashboard</h1>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>Smart Panchayat — System Overview & Management</p>
         </div>
       </div>
 
-      {feedbackSuccess && (
-        <div className="bg-emerald-950/40 border border-emerald-900 text-emerald-300 px-4 py-3 rounded-xl text-xs font-semibold flex items-center space-x-2">
-          <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400" />
-          <span>{feedbackSuccess}</span>
+      {feedback.text && (
+        <div style={{ padding: '0.75rem 1.25rem', borderRadius: '10px', marginBottom: '1.25rem', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', background: feedback.type === 'success' ? '#f0fdf4' : '#fef2f2', border: `1px solid ${feedback.type === 'success' ? '#bbf7d0' : '#fecaca'}`, color: feedback.type === 'success' ? '#15803d' : '#b91c1c' }}>
+          <CheckCircle size={16} /> {feedback.text}
+          <button onClick={() => setFeedback({ type: '', text: '' })} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>✕</button>
         </div>
       )}
 
-      {feedbackError && (
-        <div className="bg-rose-950/40 border border-rose-900 text-rose-300 px-4 py-3 rounded-xl text-xs font-semibold flex items-center space-x-2">
-          <Clock className="h-4 w-4 shrink-0 text-rose-450" />
-          <span>{feedbackError}</span>
-        </div>
-      )}
+      {/* Stats Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.85rem', marginBottom: '2rem' }}>
+        {[
+          { label: 'Registered Citizens', value: stats.citizensCount, icon: Users, color: '#2563eb', bg: '#dbeafe' },
+          { label: 'Active Schemes', value: stats.schemesCount, icon: BookOpen, color: '#7c3aed', bg: '#ede9fe' },
+          { label: 'Notices Published', value: stats.announcementsCount, icon: Bell, color: '#d97706', bg: '#fef9c3' },
+          { label: 'Online Applications', value: stats.applicationsCount, icon: FileText, color: '#0891b2', bg: '#e0f2fe' },
+          { label: 'Appointments', value: stats.appointmentsCount, icon: CalendarCheck, color: '#16a34a', bg: '#dcfce7' },
+        ].map(({ label, value, icon: Icon, color, bg }) => (
+          <div key={label} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.85rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ background: bg, borderRadius: '10px', padding: '0.6rem', flexShrink: 0 }}>
+              <Icon size={20} color={color} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>{loading ? '…' : value}</div>
+              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginTop: '0.2rem' }}>{label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Counters Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-5 rounded-2xl flex items-center space-x-4 border border-slate-800">
-          <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 text-emerald-400">
-            <Users className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Registered Citizens</p>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{loading ? '...' : stats.citizensCount}</h3>
-          </div>
+      {/* ── ANALYTICS CHARTS ─────────────────────────────────────── */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          <TrendingUp size={18} color="#2563eb" />
+          <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Analytics Overview</h2>
         </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
 
-        <div className="glass-card p-5 rounded-2xl flex items-center space-x-4 border border-slate-800">
-          <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 text-sky-400">
-            <BookOpen className="h-6 w-6" />
-          </div>
+          {/* Bar Chart — Applications per Scheme */}
           <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Active Schemes</p>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{loading ? '...' : stats.schemesCount}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+              <BarChart2 size={14} color="#2563eb" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Applications per Scheme</span>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={appsByScheme} margin={{ top: 0, right: 0, left: -25, bottom: 30 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8' }} angle={-35} textAnchor="end" interval={0} />
+                <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} allowDecimals={false} />
+                <Tooltip contentStyle={{ fontSize: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <Bar dataKey="Applications" fill="#2563eb" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        </div>
 
-        <div className="glass-card p-5 rounded-2xl flex items-center space-x-4 border border-slate-800">
-          <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 text-amber-400">
-            <Bell className="h-6 w-6" />
-          </div>
+          {/* Pie Chart — Status Distribution */}
           <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Notices Published</p>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{loading ? '...' : stats.announcementsCount}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+              <PieIcon size={14} color="#7c3aed" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Approval vs Rejection Rate</span>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={appsByStatus} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''} labelLine={false} fontSize={9}>
+                  {appsByStatus.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={['#94a3b8', '#f59e0b', '#16a34a', '#dc2626'][index] || COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Legend wrapperStyle={{ fontSize: '0.75rem' }} />
+                <Tooltip contentStyle={{ fontSize: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        </div>
 
-        <div className="glass-card p-5 rounded-2xl flex items-center space-x-4 border border-slate-800">
-          <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 text-teal-400">
-            <FileText className="h-6 w-6" />
-          </div>
+          {/* Line Chart — Citizen Registrations */}
           <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Online Applications</p>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{loading ? '...' : stats.applicationsCount}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+              <TrendingUp size={14} color="#16a34a" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Registrations</span>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={registrationsByMonth} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="month" tick={{ fontSize: 9, fill: '#94a3b8' }} />
+                <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} allowDecimals={false} />
+                <Tooltip contentStyle={{ fontSize: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <Line type="monotone" dataKey="Citizens" stroke="#16a34a" strokeWidth={2.5} dot={{ r: 4, fill: '#16a34a' }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Modules Menu */}
-      <div className="space-y-4">
-        <h2 className="text-white font-bold text-lg">System Management</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {adminModules.map((mod, idx) => {
-            const Icon = mod.icon;
-            return (
-              <Link
-                key={idx}
-                to={mod.link}
-                className="glass-card p-6 rounded-2xl border border-slate-800/80 hover:border-emerald-500/30 flex flex-col justify-between group transition-all duration-300"
-              >
-                <div>
-                  <div className="bg-slate-900/60 p-2.5 rounded-lg w-fit border border-slate-850 mb-4">
-                    <Icon className={`h-5 w-5 ${mod.color}`} />
-                  </div>
-                  <h3 className="text-white font-bold text-sm mb-1">{mod.title}</h3>
-                  <p className="text-slate-400 text-xs leading-relaxed">{mod.desc}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+      {/* Module Links */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem', marginBottom: '2rem' }}>
+        {adminModules.map((mod) => {
+          const Icon = mod.icon;
+          return (
+            <Link key={mod.link} to={mod.link} style={{ textDecoration: 'none', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', transition: 'all 0.2s ease', display: 'block' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#bfdbfe'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(37,99,235,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+            >
+              <div style={{ background: mod.bg, borderRadius: '10px', width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <Icon size={18} color={mod.color} />
+              </div>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>{mod.title}</h3>
+              <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>{mod.desc}</p>
+            </Link>
+          );
+        })}
       </div>
 
-      {/* Manage Online Applications Panel */}
-      <div className="glass-card p-6 rounded-3xl border border-slate-800">
-        <h2 className="text-white font-bold text-lg mb-2">Citizen Online Application Logs</h2>
-        <p className="text-slate-400 text-xs mb-6">Review eligibility qualifications and update application verification states.</p>
-
-        {appsLoading ? (
-          <p className="text-slate-500 text-center py-6 text-xs">Loading application data...</p>
-        ) : applications.length === 0 ? (
-          <p className="text-slate-500 text-center py-6 text-xs">No online applications submitted yet.</p>
+      {/* ── APPOINTMENT REQUESTS ─────────────────────────────────── */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+          <CalendarCheck size={18} color="#16a34a" />
+          <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Appointment Requests</h2>
+        </div>
+        {apptLoading ? (
+          <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem', fontSize: '0.875rem' }}>Loading appointments...</p>
+        ) : appointments.length === 0 ? (
+          <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem', fontSize: '0.875rem' }}>No appointments booked yet.</p>
         ) : (
-          <div className="space-y-4">
-            {applications.map((app) => (
-              <div key={app._id} className="bg-slate-900/60 border border-slate-850 p-5 rounded-2xl">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="space-y-1">
-                    <span className="bg-slate-850 text-slate-400 text-[9px] font-bold px-2.5 py-0.5 rounded border border-slate-800 uppercase">
-                      {app.scheme?.category || 'General'}
-                    </span>
-                    <h3 className="text-white font-bold text-base md:text-lg">{app.scheme?.title || 'Welfare Scheme'}</h3>
-                    
-                    {/* Applicant Profile info */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-450 pt-1">
-                      <span className="font-semibold text-slate-300">Applicant: {app.user?.name} ({app.user?.email})</span>
-                      <span>• Age: {app.user?.age || 'N/A'}</span>
-                      <span>• Income: {app.user?.annualIncome ? `₹${app.user.annualIncome}` : 'N/A'}</span>
-                      <span>• Job: {app.user?.occupation || 'N/A'}</span>
-                      <span>• Caste: {app.user?.category || 'N/A'}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {appointments.map(appt => (
+              <div key={appt._id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem 1.25rem' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>{appt.user?.name || 'Citizen'}</span>
+                      {statusBadge(appt.status)}
                     </div>
+                    <p style={{ margin: '0 0 0.25rem', fontSize: '0.82rem', color: '#64748b' }}>📅 {new Date(appt.date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · 🕐 {appt.timeSlot}</p>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#475569' }}>Purpose: <strong>{appt.purpose}</strong></p>
+                    {appt.adminNote && <p style={{ margin: '0.3rem 0 0', fontSize: '0.78rem', color: '#7c3aed', fontWeight: 600 }}>Note: {appt.adminNote}</p>}
                   </div>
-
-                  {editingAppId === app._id ? (
-                    /* Inline Editor Controls */
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto pt-2">
-                      <select
-                        value={editStatus}
-                        onChange={(e) => setEditStatus(e.target.value)}
-                        className="bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 py-1.5 px-3 outline-none"
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Under Review">Under Review</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="Add remarks..."
-                        value={editRemarks}
-                        onChange={(e) => setEditRemarks(e.target.value)}
-                        className="bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-350 py-1.5 px-3 outline-none flex-grow"
-                      />
-                      <div className="flex gap-1.5 justify-end">
-                        <button
-                          onClick={() => handleUpdateStatus(app._id)}
-                          className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 p-2 rounded-lg"
-                          title="Save Changes"
-                        >
-                          <Check className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingAppId(null)}
-                          className="bg-slate-800 hover:bg-slate-750 text-slate-400 p-2 rounded-lg"
-                          title="Cancel"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                  <div>
+                    {editingApptId === appt._id ? (
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <select value={editApptStatus} onChange={e => setEditApptStatus(e.target.value)} style={{ border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: '#334155', outline: 'none' }}>
+                          <option>Pending</option>
+                          <option>Confirmed</option>
+                          <option>Cancelled</option>
+                        </select>
+                        <input type="text" placeholder="Admin note..." value={editApptNote} onChange={e => setEditApptNote(e.target.value)} style={{ border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: '#334155', outline: 'none', width: 160 }} />
+                        <button onClick={() => handleUpdateApptStatus(appt._id)} style={{ padding: '0.4rem 0.6rem', borderRadius: '8px', background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', cursor: 'pointer' }}><Check size={14} /></button>
+                        <button onClick={() => setEditingApptId(null)} style={{ padding: '0.4rem 0.6rem', borderRadius: '8px', background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', cursor: 'pointer' }}><X size={14} /></button>
                       </div>
-                    </div>
-                  ) : (
-                    /* Info Badge & Action Button */
-                    <div className="flex items-center space-x-3 shrink-0 pt-2 md:pt-0">
-                      <div>
-                        {app.status === 'Approved' ? (
-                          <span className="flex items-center space-x-1 bg-emerald-950 text-emerald-400 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-emerald-900">
-                            <ThumbsUp className="h-3.5 w-3.5" />
-                            <span>Approved</span>
-                          </span>
-                        ) : app.status === 'Rejected' ? (
-                          <span className="flex items-center space-x-1 bg-rose-950 text-rose-455 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-rose-900">
-                            <ThumbsDown className="h-3.5 w-3.5" />
-                            <span>Rejected</span>
-                          </span>
-                        ) : app.status === 'Under Review' ? (
-                          <span className="flex items-center space-x-1 bg-amber-950 text-amber-400 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-amber-900">
-                            <Clock className="h-3.5 w-3.5" />
-                            <span>Under Review</span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center space-x-1 bg-slate-950 text-slate-400 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-slate-850">
-                            <Clock className="h-3.5 w-3.5" />
-                            <span>Pending</span>
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => startEditing(app)}
-                        className="bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 p-2 rounded-lg text-xs font-semibold flex items-center space-x-1"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <button onClick={() => { setEditingApptId(appt._id); setEditApptStatus(appt.status); setEditApptNote(appt.adminNote || ''); }} style={{ padding: '0.45rem 0.85rem', borderRadius: '8px', background: '#fff', border: '1.5px solid #e2e8f0', color: '#334155', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Edit2 size={13} /> Review
                       </button>
-                    </div>
-                  )}
-                </div>
-
-                {app.remarks && !editingAppId && (
-                  <div className="mt-3 bg-slate-950/60 p-2.5 rounded-xl border border-slate-850 text-xs">
-                    <span className="text-[10px] text-amber-500 font-extrabold uppercase tracking-wide">Remarks:</span>
-                    <p className="text-slate-400 mt-0.5">{app.remarks}</p>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
 
+      {/* ── APPLICATION LOGS ─────────────────────────────────────── */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+          <FileText size={18} color="#2563eb" />
+          <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Citizen Online Application Logs</h2>
+        </div>
+        {appsLoading ? (
+          <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem', fontSize: '0.875rem' }}>Loading applications...</p>
+        ) : applications.length === 0 ? (
+          <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem', fontSize: '0.875rem' }}>No applications submitted yet.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {applications.map(app => (
+              <div key={app._id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem 1.25rem' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                  <div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                      <span style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '999px', padding: '0.15rem 0.6rem', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase' }}>{app.scheme?.category}</span>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>{app.scheme?.title}</span>
+                    </div>
+                    <p style={{ margin: '0 0 0.25rem', fontSize: '0.82rem', color: '#64748b' }}>
+                      Applicant: <strong style={{ color: '#334155' }}>{app.user?.name}</strong> · {app.user?.email}
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>
+                      Age: {app.user?.age || 'N/A'} · Income: {app.user?.annualIncome ? `₹${app.user.annualIncome}` : 'N/A'} · {app.user?.occupation || 'N/A'} · {app.user?.category || 'N/A'}
+                    </p>
+                    {app.remarks && <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: '#7c3aed', fontWeight: 600 }}>Remarks: {app.remarks}</p>}
+                  </div>
+                  <div>
+                    {editingAppId === app._id ? (
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={{ border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: '#334155', outline: 'none' }}>
+                          <option>Pending</option><option>Under Review</option><option>Approved</option><option>Rejected</option>
+                        </select>
+                        <input type="text" placeholder="Add remarks..." value={editRemarks} onChange={e => setEditRemarks(e.target.value)} style={{ border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: '#334155', outline: 'none', width: 160 }} />
+                        <button onClick={() => handleUpdateAppStatus(app._id)} style={{ padding: '0.4rem 0.6rem', borderRadius: '8px', background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', cursor: 'pointer' }}><Check size={14} /></button>
+                        <button onClick={() => setEditingAppId(null)} style={{ padding: '0.4rem 0.6rem', borderRadius: '8px', background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', cursor: 'pointer' }}><X size={14} /></button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {statusBadge(app.status)}
+                        <button onClick={() => { setEditingAppId(app._id); setEditStatus(app.status); setEditRemarks(app.remarks || ''); }} style={{ padding: '0.4rem 0.6rem', borderRadius: '8px', background: '#fff', border: '1.5px solid #e2e8f0', color: '#334155', cursor: 'pointer' }}><Edit2 size={13} /></button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

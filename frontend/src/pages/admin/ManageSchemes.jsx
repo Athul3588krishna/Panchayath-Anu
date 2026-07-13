@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
-import { BookOpen, Plus, Edit, Trash2, Save, X, PlusCircle, MinusCircle, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { BookOpen, Edit, Trash2, Save, PlusCircle, MinusCircle, FileText, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
+import CountdownBadge from '../../components/CountdownBadge';
 
 const ManageSchemes = () => {
   const { token } = useAuth();
@@ -23,7 +24,8 @@ const ManageSchemes = () => {
   const [allowedCatList, setAllowedCatList] = useState([]); // General, OBC, SC, ST
 
   const [docInputs, setDocInputs] = useState(['']);
-  
+  const [expiresAt, setExpiresAt] = useState(''); // YYYY-MM-DD string or ''
+
   // File upload state
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedPath, setUploadedPath] = useState('');
@@ -140,7 +142,8 @@ const ManageSchemes = () => {
         allowedCategories: allowedCatList
       },
       requiredDocuments,
-      formUrl: uploadedPath
+      formUrl: uploadedPath,
+      expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null
     };
 
     try {
@@ -191,6 +194,8 @@ const ManageSchemes = () => {
     setAllowedCatList(scheme.eligibilityCriteria?.allowedCategories || []);
     setDocInputs(scheme.requiredDocuments && scheme.requiredDocuments.length > 0 ? scheme.requiredDocuments : ['']);
     setUploadedPath(scheme.formUrl || '');
+    // Prefill expiry date picker (convert ISO → YYYY-MM-DD)
+    setExpiresAt(scheme.expiresAt ? new Date(scheme.expiresAt).toISOString().split('T')[0] : '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -229,6 +234,7 @@ const ManageSchemes = () => {
     setDocInputs(['']);
     setSelectedFile(null);
     setUploadedPath('');
+    setExpiresAt('');
   };
 
   return (
@@ -334,6 +340,30 @@ const ManageSchemes = () => {
                       {uploading ? 'Uploading Document...' : uploadedPath ? `Uploaded: ${uploadedPath.split('/').pop()}` : 'Choose PDF/DOC File'}
                     </label>
                   </div>
+                </div>
+
+                {/* Expiry Date */}
+                <div>
+                  <label className="block text-slate-300 text-xs font-semibold mb-2 flex items-center gap-1">
+                    <Calendar size={13} className="text-amber-400" />
+                    Application Deadline (Expiry Date)
+                  </label>
+                  <input
+                    type="date"
+                    value={expiresAt}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/60 rounded-xl py-2.5 px-4 text-sm text-slate-100 outline-none transition-all"
+                  />
+                  <p className="text-slate-600 text-[10px] mt-1">
+                    Leave blank = Always Open. Citizens will see a countdown badge on the scheme card.
+                  </p>
+                  {expiresAt && (
+                    <div className="mt-2">
+                      <span className="text-slate-500 text-[10px] mr-2">Preview:</span>
+                      <CountdownBadge expiresAt={expiresAt} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -464,10 +494,11 @@ const ManageSchemes = () => {
             {schemes.map((s) => (
               <div key={s._id} className="glass-card p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="bg-slate-900 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-850">
                       {s.category}
                     </span>
+                    <CountdownBadge expiresAt={s.expiresAt} />
                     {s.formUrl && (
                       <span className="flex items-center space-x-0.5 text-emerald-400 text-[9px] font-bold uppercase">
                         <FileText className="h-3 w-3" />
@@ -476,7 +507,12 @@ const ManageSchemes = () => {
                     )}
                   </div>
                   <h4 className="text-white font-bold text-base mt-1">{s.title}</h4>
-                  <p className="text-slate-500 text-xs line-clamp-1 mt-1">{s.description}</p>
+                  <p className="text-slate-500 text-xs line-clamp-1 mt-0.5">{s.description}</p>
+                  {s.expiresAt && (
+                    <p className="text-amber-500/70 text-[10px] mt-1 font-semibold">
+                      ⏰ Deadline: {new Date(s.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2 shrink-0">

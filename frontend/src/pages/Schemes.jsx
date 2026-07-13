@@ -2,20 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Search, BookOpen, AlertCircle, FileText, CheckCircle2, XCircle, Download, RefreshCw, Eye, Landmark } from 'lucide-react';
+import { Search, BookOpen, AlertCircle, FileText, CheckCircle2, XCircle, Download, RefreshCw, Eye, Calendar, CalendarX } from 'lucide-react';
+import CountdownBadge from '../components/CountdownBadge';
+import { generateApplicationPDF } from '../utils/pdfGenerator';
 
 const Schemes = () => {
   const { user, token } = useAuth();
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Search and Filter State
   const [schemes, setSchemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  
-  // Eligibility Checker State
   const [checkerAge, setCheckerAge] = useState('');
   const [checkerIncome, setCheckerIncome] = useState('');
   const [checkerOcc, setCheckerOcc] = useState('');
@@ -24,91 +23,51 @@ const Schemes = () => {
   const [eligibleSchemes, setEligibleSchemes] = useState([]);
   const [checking, setChecking] = useState(false);
   const [eligibilityChecked, setEligibilityChecked] = useState(false);
-
-  // Selected Scheme for details modal
   const [activeScheme, setActiveScheme] = useState(null);
-
-  // Application submission status overlay
   const [submittingApp, setSubmittingApp] = useState(false);
   const [appFeedback, setAppFeedback] = useState({ type: '', text: '' });
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const categories = ['All', 'Agriculture', 'Animal Husbandry', 'Housing', 'Education', 'Social Welfare', 'Health', 'Employment'];
+  const occupationsList = ['Farmer', 'Agriculture worker', 'Daily Wage Labourer', 'Unemployed', 'Student', 'Self Employed', 'Housewife', 'Other'];
 
-  const occupationsList = [
-    'Farmer',
-    'Agriculture worker',
-    'Daily Wage Labourer',
-    'Unemployed',
-    'Student',
-    'Self Employed',
-    'Housewife',
-    'Other'
-  ];
+  const isExpired = (scheme) => {
+    if (!scheme.expiresAt) return false;
+    return new Date(scheme.expiresAt) < new Date();
+  };
 
-  // Fetch schemes
   const fetchSchemes = async () => {
     setLoading(true);
     try {
       const categoryParam = searchParams.get('category');
       const searchParam = searchParams.get('search');
-      
       let url = `${API_BASE_URL}/schemes`;
       const queryParams = [];
-      
-      if (categoryParam && categoryParam !== 'All') {
-        queryParams.push(`category=${encodeURIComponent(categoryParam)}`);
-        setSelectedCategory(categoryParam);
-      }
-      if (searchParam) {
-        queryParams.push(`search=${encodeURIComponent(searchParam)}`);
-        setSearchQuery(searchParam);
-      }
-      
-      if (queryParams.length > 0) {
-        url += `?${queryParams.join('&')}`;
-      }
-
+      if (categoryParam && categoryParam !== 'All') { queryParams.push(`category=${encodeURIComponent(categoryParam)}`); setSelectedCategory(categoryParam); }
+      if (searchParam) { queryParams.push(`search=${encodeURIComponent(searchParam)}`); setSearchQuery(searchParam); }
+      if (queryParams.length > 0) url += `?${queryParams.join('&')}`;
       const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setSchemes(data);
-      }
-    } catch (err) {
-      console.error('Error fetching schemes:', err);
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) { const data = await res.json(); setSchemes(data); }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchSchemes();
-  }, [searchParams]);
+  useEffect(() => { fetchSchemes(); }, [searchParams]);
 
-  // Handle category tab clicks
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
-    const newParams = new URLSearchParams(searchParams);
-    if (category === 'All') {
-      newParams.delete('category');
-    } else {
-      newParams.set('category', category);
-    }
-    setSearchParams(newParams);
+    const p = new URLSearchParams(searchParams);
+    if (category === 'All') p.delete('category'); else p.set('category', category);
+    setSearchParams(p);
   };
 
-  // Handle Search submit
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    const newParams = new URLSearchParams(searchParams);
-    if (searchQuery.trim() === '') {
-      newParams.delete('search');
-    } else {
-      newParams.set('search', searchQuery);
-    }
-    setSearchParams(newParams);
+    const p = new URLSearchParams(searchParams);
+    if (searchQuery.trim() === '') p.delete('search'); else p.set('search', searchQuery);
+    setSearchParams(p);
   };
 
-  // Toggle pulling profile details for checker
   const handleUseProfileToggle = () => {
     if (!useProfile && user) {
       setCheckerAge(user.age !== null ? String(user.age) : '');
@@ -116,40 +75,21 @@ const Schemes = () => {
       setCheckerOcc(user.occupation || '');
       setCheckerCat(user.category || '');
       setUseProfile(true);
-    } else {
-      setUseProfile(false);
-    }
+    } else { setUseProfile(false); }
   };
 
-  // Run checker rules
   const runEligibilityChecker = async (e) => {
     if (e) e.preventDefault();
-    setChecking(true);
-    setEligibilityChecked(true);
-
+    setChecking(true); setEligibilityChecked(true);
     try {
       const res = await fetch(`${API_BASE_URL}/schemes/check-eligibility`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          age: checkerAge !== '' ? Number(checkerAge) : null,
-          annualIncome: checkerIncome !== '' ? Number(checkerIncome) : null,
-          occupation: checkerOcc,
-          category: checkerCat
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ age: checkerAge !== '' ? Number(checkerAge) : null, annualIncome: checkerIncome !== '' ? Number(checkerIncome) : null, occupation: checkerOcc, category: checkerCat })
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setEligibleSchemes(data);
-      }
-    } catch (err) {
-      console.error('Error running eligibility checker:', err);
-    } finally {
-      setChecking(false);
-    }
+      if (res.ok) { const data = await res.json(); setEligibleSchemes(data); }
+    } catch (err) { console.error(err); }
+    finally { setChecking(false); }
   };
 
   useEffect(() => {
@@ -159,561 +99,272 @@ const Schemes = () => {
       setCheckerOcc(user.occupation || '');
       setCheckerCat(user.category || '');
       setUseProfile(true);
-      
       setTimeout(() => {
-        setChecking(true);
-        setEligibilityChecked(true);
+        setChecking(true); setEligibilityChecked(true);
         fetch(`${API_BASE_URL}/schemes/check-eligibility`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            age: user.age,
-            annualIncome: user.annualIncome,
-            occupation: user.occupation,
-            category: user.category
-          })
-        }).then(res => res.json()).then(data => {
-          setEligibleSchemes(data);
-          setChecking(false);
-        });
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ age: user.age, annualIncome: user.annualIncome, occupation: user.occupation, category: user.category })
+        }).then(r => r.json()).then(data => { setEligibleSchemes(data); setChecking(false); });
       }, 300);
     }
   }, [user, searchParams]);
 
-  // Download Handler
+  // ─── PDF DOWNLOAD ─────────────────────────────────────────────────
   const handleDownload = async (scheme) => {
+    setGeneratingPdf(true);
     try {
-      await fetch(`${API_BASE_URL}/schemes/${scheme._id}/download`, {
-        method: 'POST'
-      });
+      await fetch(`${API_BASE_URL}/schemes/${scheme._id}/download`, { method: 'POST' }).catch(() => {});
+      setSchemes(prev => prev.map(s => s._id === scheme._id ? { ...s, downloadsCount: (s.downloadsCount || 0) + 1 } : s));
 
-      setSchemes(prev => prev.map(s => {
-        if (s._id === scheme._id) {
-          return { ...s, downloadsCount: (s.downloadsCount || 0) + 1 };
-        }
-        return s;
-      }));
-
-      if (scheme.formUrl) {
-        const downloadUrl = scheme.formUrl.startsWith('http') 
-          ? scheme.formUrl 
-          : `http://localhost:5000${scheme.formUrl}`;
-        window.open(downloadUrl, '_blank');
+      if (scheme.formUrl && scheme.formUrl.startsWith('http')) {
+        window.open(scheme.formUrl, '_blank');
       } else {
-        const fileContent = `======================================================
-SMART PANCHAYAT WELFARE SCHEME APPLICATION FORM
-======================================================
-SCHEME NAME: ${scheme.title}
-CATEGORY: ${scheme.category}
-DATE GENERATED: ${new Date().toLocaleDateString()}
-
-------------------------------------------------------
-APPLICANT INFORMATION (Pre-filled / Verification Template)
-------------------------------------------------------
-NAME: ${user?.name || '________________________'}
-EMAIL: ${user?.email || '________________________'}
-AGE: ${user?.age || '____'} Years
-ANNUAL HOUSEHOLD INCOME: ₹${user?.annualIncome || '________'}
-OCCUPATION: ${user?.occupation || '________________________'}
-SOCIAL CATEGORY: ${user?.category || '____'} (General/OBC/SC/ST)
-
-------------------------------------------------------
-REQUIRED ATTACHMENT CHECKLIST
-------------------------------------------------------
-${scheme.requiredDocuments.map((doc, i) => `[ ] ${i + 1}. ${doc}`).join('\n')}
-
-------------------------------------------------------
-CITIZEN DECLARATION
-------------------------------------------------------
-I hereby declare that the particulars given above are true and correct to the best of my knowledge and belief and nothing has been concealed thereof.
-
-Signature of Applicant: ________________________
-Date: ____/____/________
-
-======================================================
-Submit this completed document at the Panchayat Office counter.
-======================================================`;
-
-        const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Application_Form_${scheme.title.replace(/\s+/g, '_')}.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        // Generate branded PDF
+        await generateApplicationPDF(scheme, user);
       }
     } catch (err) {
-      console.error('Error handling download count:', err);
+      console.error('PDF generation error:', err);
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
   const handleViewScheme = async (scheme) => {
-    setActiveScheme(scheme);
+    setActiveScheme(scheme); setAppFeedback({ type: '', text: '' });
     try {
       const res = await fetch(`${API_BASE_URL}/schemes/${scheme._id}`);
-      if (res.ok) {
-        const updatedScheme = await res.json();
-        setSchemes(prev => prev.map(s => s._id === scheme._id ? updatedScheme : s));
-      }
-    } catch (err) {
-      console.log('Error incrementing view:', err);
-    }
+      if (res.ok) { const updated = await res.json(); setSchemes(prev => prev.map(s => s._id === scheme._id ? updated : s)); setActiveScheme(updated); }
+    } catch (err) { console.log(err); }
   };
 
-  // Submit Application Online
   const handleApplyOnline = async (schemeId) => {
-    if (!token) {
-      setAppFeedback({
-        type: 'error',
-        text: language === 'ml' ? 'ഓൺലൈനായി അപേക്ഷിക്കാൻ ദയവായി ലോഗിൻ ചെയ്യുക.' : 'Please log in to submit application online.'
-      });
-      return;
-    }
-
-    setSubmittingApp(true);
-    setAppFeedback({ type: '', text: '' });
-
+    if (!token) { setAppFeedback({ type: 'error', text: language === 'ml' ? 'ഓൺലൈനായി അപേക്ഷിക്കാൻ ദയവായി ലോഗിൻ ചെയ്യുക.' : 'Please log in to submit an online application.' }); return; }
+    setSubmittingApp(true); setAppFeedback({ type: '', text: '' });
     try {
       const res = await fetch(`${API_BASE_URL}/applications`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ schemeId })
       });
       const data = await res.json();
-
       if (res.ok) {
-        setAppFeedback({
-          type: 'success',
-          text: language === 'ml' 
-            ? 'അപേക്ഷ ഓൺലൈനായി സമർപ്പിച്ചു! നില പ്രൊഫൈൽ പേജിൽ പരിശോധിക്കാം.' 
-            : 'Application submitted online! Track its status under your Profile.'
-        });
+        setAppFeedback({ type: 'success', text: language === 'ml' ? 'അപേക്ഷ ഓൺലൈനായി സമർപ്പിച്ചു! നില പ്രൊഫൈൽ പേജിൽ പരിശോധിക്കാം.' : 'Application submitted! Track status in your Profile.' });
       } else {
-        setAppFeedback({
-          type: 'error',
-          text: data.message || 'Application submission failed.'
-        });
+        setAppFeedback({ type: 'error', text: data.message || 'Submission failed.' });
       }
-    } catch (err) {
-      setAppFeedback({
-        type: 'error',
-        text: 'Network error submitting online application.'
-      });
-    } finally {
-      setSubmittingApp(false);
-    }
+    } catch (err) { setAppFeedback({ type: 'error', text: 'Network error.' }); }
+    finally { setSubmittingApp(false); }
+  };
+
+  const schemeCard = (scheme, eligibleBadge = null) => {
+    const expired = isExpired(scheme);
+    return (
+      <div key={scheme._id} style={{
+        background: '#fff', border: `1px solid ${expired ? '#fecaca' : '#e2e8f0'}`,
+        borderRadius: '16px', padding: '1.25rem',
+        opacity: expired ? 0.75 : 1,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        transition: 'all 0.2s ease'
+      }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+            <span style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '999px', padding: '0.18rem 0.65rem', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase' }}>{scheme.category}</span>
+            <CountdownBadge expiresAt={scheme.expiresAt} />
+            {eligibleBadge}
+          </div>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button onClick={() => handleViewScheme(scheme)} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#334155', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+              <Eye size={13} /> {t('detailsBtn')}
+            </button>
+            <button onClick={() => handleDownload(scheme)} disabled={generatingPdf} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.75rem', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#2563eb,#4f46e5)', color: '#fff', fontSize: '0.78rem', fontWeight: 700, cursor: generatingPdf ? 'wait' : 'pointer' }}>
+              <Download size={13} /> {generatingPdf ? 'Generating...' : t('getFormBtn')}
+            </button>
+          </div>
+        </div>
+        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.4rem' }}>{scheme.title}</h3>
+        <p style={{ fontSize: '0.82rem', color: '#475569', margin: '0 0 0.75rem', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{scheme.description}</p>
+        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>
+          <span>👁 {scheme.viewsCount || 0} views</span>
+          <span>📥 {scheme.downloadsCount || 0} downloads</span>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-10">
-      
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">{t('schemesTitle')}</h1>
-        <p className="text-slate-400 text-sm">{t('schemesSubText')}</p>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div style={{ marginBottom: '1.75rem' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.4rem' }}>{t('schemesTitle')}</h1>
+        <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>{t('schemesSubText')}</p>
       </div>
 
-      {/* Feedback Banner for Online Applications */}
       {appFeedback.text && (
-        <div className={`px-4 py-3.5 rounded-2xl text-xs md:text-sm border font-semibold flex items-center space-x-2 animate-in fade-in slide-in-from-top-2 duration-300 ${
-          appFeedback.type === 'success' 
-            ? 'bg-emerald-950/40 border-emerald-900 text-emerald-300' 
-            : 'bg-rose-950/40 border-rose-900 text-rose-300'
-        }`}>
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <span className="flex-grow">{appFeedback.text}</span>
-          <button 
-            onClick={() => setAppFeedback({ type: '', text: '' })}
-            className="text-[10px] font-bold uppercase tracking-wider underline hover:text-white"
-          >
-            {t('closeBtn')}
-          </button>
+        <div style={{ padding: '0.85rem 1.25rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', fontWeight: 600, background: appFeedback.type === 'success' ? '#f0fdf4' : '#fef2f2', border: `1px solid ${appFeedback.type === 'success' ? '#bbf7d0' : '#fecaca'}`, color: appFeedback.type === 'success' ? '#15803d' : '#b91c1c' }}>
+          <AlertCircle size={18} />
+          <span style={{ flex: 1 }}>{appFeedback.text}</span>
+          <button onClick={() => setAppFeedback({ type: '', text: '' })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 700, fontSize: '0.8rem' }}>{t('closeBtn')}</button>
         </div>
       )}
 
-      {/* Grid: Search/Filter + Directory vs. Eligibility Checker */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Side: Eligibility Checker Tool */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="glass-card p-6 rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900/40 to-slate-950/20">
-            <h3 className="text-white font-bold text-lg mb-2">{t('interactiveScreening')}</h3>
-            <p className="text-slate-400 text-xs mb-6">{t('screeningSubText')}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.5rem' }} className="schemes-grid">
+        {/* Sidebar — Eligibility Checker */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', height: 'fit-content', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.35rem' }}>{t('interactiveScreening')}</h3>
+          <p style={{ color: '#64748b', fontSize: '0.8rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>{t('screeningSubText')}</p>
 
-            <form onSubmit={runEligibilityChecker} className="space-y-4">
-              {user && (
-                <div className="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800 mb-4">
-                  <span className="text-xs text-slate-300 font-semibold">{t('pullProfile')}</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={useProfile}
-                      onChange={handleUseProfileToggle}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950 peer-checked:after:border-emerald-600"></div>
-                  </label>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-slate-300 text-xs font-semibold mb-1.5">{language === 'ml' ? 'പ്രായം' : 'Age'}</label>
-                <input
-                  type="number"
-                  placeholder={language === 'ml' ? 'പ്രായം നൽകുക' : 'Enter age'}
-                  value={checkerAge}
-                  onChange={(e) => { setCheckerAge(e.target.value); setUseProfile(false); }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500/60 rounded-xl py-2 px-3.5 text-sm text-slate-100 outline-none"
-                />
+          <form onSubmit={runEligibilityChecker} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {user && (
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.6rem 0.85rem', cursor: 'pointer' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>{t('pullProfile')}</span>
+                <input type="checkbox" checked={useProfile} onChange={handleUseProfileToggle} style={{ accentColor: '#2563eb', width: 16, height: 16 }} />
+              </label>
+            )}
+            {[
+              { label: language === 'ml' ? 'പ്രായം' : 'Age', value: checkerAge, setter: setCheckerAge, type: 'number', placeholder: language === 'ml' ? 'പ്രായം' : 'Enter age' },
+              { label: language === 'ml' ? 'വാർഷിക വരുമാനം (₹)' : 'Annual Income (₹)', value: checkerIncome, setter: setCheckerIncome, type: 'number', placeholder: language === 'ml' ? 'വരുമാനം' : 'Enter income' },
+            ].map(({ label, value, setter, type, placeholder }) => (
+              <div key={label}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.3rem' }}>{label}</label>
+                <input type={type} placeholder={placeholder} value={value} onChange={e => { setter(e.target.value); setUseProfile(false); }}
+                  style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }} />
               </div>
-
-              <div>
-                <label className="block text-slate-300 text-xs font-semibold mb-1.5">{language === 'ml' ? 'വാർഷിക വരുമാനം (₹)' : 'Annual Income (₹)'}</label>
-                <input
-                  type="number"
-                  placeholder={language === 'ml' ? 'വരുമാനം നൽകുക' : 'Enter annual income'}
-                  value={checkerIncome}
-                  onChange={(e) => { setCheckerIncome(e.target.value); setUseProfile(false); }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500/60 rounded-xl py-2 px-3.5 text-sm text-slate-100 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 text-xs font-semibold mb-1.5">{language === 'ml' ? 'ജോലി' : 'Occupation'}</label>
-                <select
-                  value={checkerOcc}
-                  onChange={(e) => { setCheckerOcc(e.target.value); setUseProfile(false); }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500/60 rounded-xl py-2 px-3.5 text-sm text-slate-100 outline-none"
-                >
-                  <option value="">{language === 'ml' ? 'എല്ലാ ജോലികളും' : 'All Occupations'}</option>
-                  {occupationsList.map((occ) => (
-                    <option key={occ} value={occ}>{occ}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 text-xs font-semibold mb-1.5">{language === 'ml' ? 'സാമൂഹിക വിഭാഗം' : 'Social Category'}</label>
-                <select
-                  value={checkerCat}
-                  onChange={(e) => { setCheckerCat(e.target.value); setUseProfile(false); }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500/60 rounded-xl py-2 px-3.5 text-sm text-slate-100 outline-none"
-                >
-                  <option value="">{language === 'ml' ? 'എല്ലാ വിഭാഗങ്ങളും' : 'All Categories'}</option>
-                  <option value="General">General</option>
-                  <option value="OBC">OBC</option>
-                  <option value="SC">SC</option>
-                  <option value="ST">ST</option>
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={checking}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-xl flex items-center justify-center space-x-1.5 transition-colors text-sm glow-btn"
-              >
-                {checking ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>{language === 'ml' ? 'പരിശോധിക്കുന്നു...' : 'Analyzing...'}</span>
-                  </>
-                ) : (
-                  <span>{t('verifyBtn')}</span>
-                )}
-              </button>
-            </form>
-          </div>
+            ))}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.3rem' }}>{language === 'ml' ? 'ജോലി' : 'Occupation'}</label>
+              <select value={checkerOcc} onChange={e => { setCheckerOcc(e.target.value); setUseProfile(false); }} style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: '#0f172a', outline: 'none', background: '#fff', boxSizing: 'border-box' }}>
+                <option value="">{language === 'ml' ? 'എല്ലാ ജോലികളും' : 'All Occupations'}</option>
+                {occupationsList.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '0.3rem' }}>{language === 'ml' ? 'സാമൂഹിക വിഭാഗം' : 'Social Category'}</label>
+              <select value={checkerCat} onChange={e => { setCheckerCat(e.target.value); setUseProfile(false); }} style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: '#0f172a', outline: 'none', background: '#fff', boxSizing: 'border-box' }}>
+                <option value="">{language === 'ml' ? 'എല്ലാ വിഭാഗങ്ങളും' : 'All Categories'}</option>
+                {['General', 'OBC', 'SC', 'ST'].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <button type="submit" disabled={checking} style={{ padding: '0.7rem', borderRadius: '10px', background: 'linear-gradient(135deg,#2563eb,#4f46e5)', color: '#fff', fontWeight: 700, border: 'none', cursor: checking ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.875rem' }}>
+              {checking ? <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> {language === 'ml' ? 'പരിശോധിക്കുന്നു...' : 'Analyzing...'}</> : t('verifyBtn')}
+            </button>
+          </form>
         </div>
 
-        {/* Right Side: Schemes Display and Filters */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Search bar and Category Tabs */}
-          <div className="space-y-4">
-            <form onSubmit={handleSearchSubmit} className="flex gap-2">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder={t('searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500/60 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-650 outline-none"
-                />
+        {/* Main Content */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Search + Tabs */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input type="text" placeholder={t('searchPlaceholder')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                  style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '10px', padding: '0.6rem 0.75rem 0.6rem 2.5rem', fontSize: '0.875rem', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }} />
               </div>
-              <button
-                type="submit"
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-5 rounded-xl font-semibold text-sm transition-colors animate-none"
-              >
-                {t('searchBtn')}
-              </button>
+              <button type="submit" style={{ padding: '0.6rem 1.25rem', borderRadius: '10px', background: '#fff', border: '1.5px solid #e2e8f0', color: '#334155', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}>{t('searchBtn')}</button>
             </form>
-
-            {/* Category tabs */}
-            <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-thin">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => handleCategoryClick(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-all duration-200 ${
-                    selectedCategory === cat
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40'
-                      : 'bg-slate-900/60 text-slate-400 border-slate-800/80 hover:text-slate-300'
-                  }`}
-                >
-                  {cat === 'All' ? t('allCategories') : language === 'ml'
-                    ? (cat === 'Animal Husbandry' ? 'മൃഗസംരക്ഷണം' : cat === 'Agriculture' ? 'കൃഷി' : cat === 'Housing' ? 'ഭവനം' : cat === 'Education' ? 'വിദ്യാഭ്യാസം' : cat === 'Social Welfare' ? 'ക്ഷേമകാര്യം' : cat === 'Health' ? 'ആരോഗ്യം' : 'തൊഴിൽ') 
-                    : cat}
+            <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '4px' }}>
+              {categories.map(cat => (
+                <button key={cat} onClick={() => handleCategoryClick(cat)} style={{ padding: '0.35rem 0.85rem', borderRadius: '999px', border: selectedCategory === cat ? '1.5px solid #2563eb' : '1.5px solid #e2e8f0', background: selectedCategory === cat ? '#dbeafe' : '#fff', color: selectedCategory === cat ? '#1d4ed8' : '#475569', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}>
+                  {cat === 'All' ? t('allCategories') : cat}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Directory Listings */}
+          {/* Results */}
           {loading ? (
-            <div className="text-center py-12 text-slate-400 flex flex-col items-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-emerald-450 mb-2" />
-              <span>Fetching Schemes...</span>
+            <div style={{ textAlign: 'center', padding: '4rem', color: '#64748b', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', color: '#2563eb' }} />
+              <span>Loading schemes...</span>
             </div>
           ) : eligibilityChecked ? (
-            /* Show Screening Results */
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('screeningResults')} ({eligibleSchemes.length})</span>
-                <button
-                  onClick={() => { setEligibilityChecked(false); setEligibleSchemes([]); }}
-                  className="text-xs text-rose-450 hover:underline"
-                >
-                  {t('clearResults')}
-                </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('screeningResults')} ({eligibleSchemes.length})</span>
+                <button onClick={() => { setEligibilityChecked(false); setEligibleSchemes([]); }} style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>{t('clearResults')}</button>
               </div>
-
-              {eligibleSchemes.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-8">No schemes found matching criteria.</p>
-              ) : (
-                eligibleSchemes.map((item) => {
-                  const fullScheme = schemes.find(s => s._id === item.scheme._id) || item.scheme;
-                  return (
-                    <div
-                      key={item.scheme._id}
-                      className={`glass-card p-5 rounded-2xl border transition-all ${
-                        item.isEligible 
-                          ? 'border-emerald-500/20 hover:border-emerald-500/40' 
-                          : 'border-slate-800/80 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <span className="bg-slate-850 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded">
-                              {item.scheme.category}
-                            </span>
-                            {item.isEligible ? (
-                              <span className="flex items-center text-emerald-400 text-xs font-bold space-x-0.5">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                <span>{t('eligible')}</span>
-                              </span>
-                            ) : (
-                              <span className="flex items-center text-rose-400 text-xs font-bold space-x-0.5">
-                                <XCircle className="h-3.5 w-3.5" />
-                                <span>{t('notEligible')}</span>
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="text-white font-bold text-base md:text-lg">{item.scheme.title}</h4>
-                          <p className="text-slate-400 text-xs line-clamp-2 mt-1 leading-relaxed">{item.scheme.description}</p>
-                        </div>
-                        <div className="flex md:flex-col gap-2 md:items-end shrink-0 pt-2">
-                          <button
-                            onClick={() => handleViewScheme(fullScheme)}
-                            className="bg-slate-850 hover:bg-slate-800 text-slate-200 border border-slate-750 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            <span>{t('detailsBtn')}</span>
-                          </button>
-                          {item.isEligible && (
-                            <>
-                              <button
-                                onClick={() => handleDownload(fullScheme)}
-                                className="bg-slate-800 hover:bg-slate-700 text-slate-205 border border-slate-750 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                                <span>{t('getFormBtn')}</span>
-                              </button>
-                              <button
-                                onClick={() => handleApplyOnline(fullScheme._id)}
-                                className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1 glow-btn"
-                              >
-                                <span>{t('applyOnlineBtn')}</span>
-                              </button>
-                            </>
-                          )}
-                        </div>
+              {eligibleSchemes.map(item => {
+                const fullScheme = schemes.find(s => s._id === item.scheme._id) || item.scheme;
+                const badge = item.isEligible
+                  ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '999px', padding: '0.18rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}><CheckCircle2 size={11} />{t('eligible')}</span>
+                  : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '999px', padding: '0.18rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}><XCircle size={11} />{t('notEligible')}</span>;
+                return (
+                  <div key={item.scheme._id}>
+                    {schemeCard(fullScheme, badge)}
+                    {!item.isEligible && item.reasons?.length > 0 && (
+                      <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', padding: '0.75rem 1rem', marginTop: '0.4rem' }}>
+                        <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#c2410c', margin: '0 0 0.4rem', textTransform: 'uppercase' }}>Unmet Requirements:</p>
+                        <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                          {item.reasons.map((r, i) => <li key={i} style={{ fontSize: '0.82rem', color: '#9a3412' }}>{r}</li>)}
+                        </ul>
                       </div>
-
-                      {!item.isEligible && item.reasons.length > 0 && (
-                        <div className="mt-3 bg-slate-900/60 border border-slate-850 p-2.5 rounded-xl space-y-1">
-                          <p className="text-[10px] text-rose-450 font-bold uppercase tracking-wider flex items-center space-x-1">
-                            <AlertCircle className="h-3 w-3" />
-                            <span>Failed Requirements:</span>
-                          </p>
-                          <ul className="list-disc pl-4 text-xs text-slate-400 space-y-0.5">
-                            {item.reasons.map((reason, i) => (
-                              <li key={i}>{reason}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
-            /* Show Standard Directory */
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               {schemes.length === 0 ? (
-                <div className="text-center py-12 text-slate-505 border border-slate-900 rounded-3xl">
-                  <FileText className="h-10 w-10 mx-auto mb-2 text-slate-600" />
-                  <p className="text-sm">No welfare schemes found in directory.</p>
+                <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
+                  <FileText size={40} style={{ marginBottom: '0.75rem', opacity: 0.4 }} />
+                  <p>No schemes found.</p>
                 </div>
-              ) : (
-                schemes.map((scheme) => (
-                  <div
-                    key={scheme._id}
-                    className="glass-card p-5 rounded-2xl glass-card-hover border border-slate-800/80 transition-all duration-300"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                      <div className="space-y-1">
-                        <span className="bg-slate-850 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded">
-                          {scheme.category}
-                        </span>
-                        <h4 className="text-white font-bold text-base md:text-lg">{scheme.title}</h4>
-                        <p className="text-slate-400 text-xs line-clamp-2 mt-1 leading-relaxed">{scheme.description}</p>
-                        
-                        <div className="flex items-center space-x-4 pt-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
-                          <span>Views: {scheme.viewsCount || 0}</span>
-                          <span>Downloads: {scheme.downloadsCount || 0}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex md:flex-col gap-2 md:items-end shrink-0 pt-2">
-                        <button
-                          onClick={() => handleViewScheme(scheme)}
-                          className="bg-slate-850 hover:bg-slate-800 text-slate-200 border border-slate-750 px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          <span>{t('detailsBtn')}</span>
-                        </button>
-                        <button
-                          onClick={() => handleDownload(scheme)}
-                          className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1 glow-btn"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          <span>{t('getFormBtn')}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+              ) : schemes.map(scheme => schemeCard(scheme))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Scheme Detail Modal overlay */}
+      {/* Detail Modal */}
       {activeScheme && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card max-w-2xl w-full p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
-            <button
-              onClick={() => setActiveScheme(null)}
-              className="absolute top-4 right-4 text-slate-550 hover:text-white font-semibold text-lg bg-slate-900 border border-slate-800 h-8 w-8 rounded-full flex items-center justify-center"
-            >
-              ✕
-            </button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }} onClick={e => { if (e.target === e.currentTarget) setActiveScheme(null); }}>
+          <div style={{ background: '#fff', borderRadius: '20px', maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', position: 'relative', boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>
+            <button onClick={() => setActiveScheme(null)} style={{ position: 'absolute', top: 16, right: 16, background: '#f1f5f9', border: 'none', borderRadius: '8px', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#475569' }}>✕</button>
 
-            <span className="bg-emerald-950 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full border border-emerald-900">
-              {activeScheme.category}
-            </span>
-
-            <h3 className="text-white font-extrabold text-2xl mt-4 mb-2">{activeScheme.title}</h3>
-            <p className="text-slate-400 text-sm leading-relaxed mb-6">{activeScheme.description}</p>
-
-            {/* Scheme Criteria Overview */}
-            <div className="bg-slate-900/60 border border-slate-850 p-4 rounded-2xl mb-6">
-              <h4 className="text-slate-300 font-bold text-xs uppercase tracking-wider mb-3">{t('eligibilityGuidelines')}</h4>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-400">
-                <li>
-                  <span className="font-semibold text-slate-300">{t('ageBracket')}:</span>{' '}
-                  {activeScheme.eligibilityCriteria?.minAge || 0} to{' '}
-                  {activeScheme.eligibilityCriteria?.maxAge || 150} Years
-                </li>
-                <li>
-                  <span className="font-semibold text-slate-300">{t('maxIncome')}:</span>{' '}
-                  {activeScheme.eligibilityCriteria?.maxIncome 
-                    ? `₹${activeScheme.eligibilityCriteria.maxIncome} / Year` 
-                    : 'No Limit'}
-                </li>
-                <li>
-                  <span className="font-semibold text-slate-300">{t('targetOccupations')}:</span>{' '}
-                  {activeScheme.eligibilityCriteria?.allowedOccupations && activeScheme.eligibilityCriteria.allowedOccupations.length > 0 
-                    ? activeScheme.eligibilityCriteria.allowedOccupations.join(', ') 
-                    : 'All Occupations'}
-                </li>
-                <li>
-                  <span className="font-semibold text-slate-300">{t('socialCategories')}:</span>{' '}
-                  {activeScheme.eligibilityCriteria?.allowedCategories && activeScheme.eligibilityCriteria.allowedCategories.length > 0 
-                    ? activeScheme.eligibilityCriteria.allowedCategories.join(', ') 
-                    : 'All Categories'}
-                </li>
-              </ul>
-            </div>
-
-            {/* Required Documents */}
-            <div className="mb-8">
-              <h4 className="text-white font-bold text-sm mb-3">{t('requiredDocs')}</h4>
-              {activeScheme.requiredDocuments && activeScheme.requiredDocuments.length > 0 ? (
-                <ul className="list-disc pl-5 text-xs text-slate-400 space-y-1.5">
-                  {activeScheme.requiredDocuments.map((doc, i) => (
-                    <li key={i}>{doc}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-slate-500">{t('noDocs')}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
+              <span style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '999px', padding: '0.22rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>{activeScheme.category}</span>
+              <CountdownBadge expiresAt={activeScheme.expiresAt} />
+              {isExpired(activeScheme) && (
+                <span style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '999px', padding: '0.22rem 0.75rem', fontSize: '0.7rem', fontWeight: 700 }}>Applications Closed</span>
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => handleDownload(activeScheme)}
-                className="flex-grow bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-3 rounded-xl flex items-center justify-center space-x-1.5 transition-colors text-sm"
-              >
-                <Download className="h-4 w-4" />
-                <span>{t('downloadFormBtn')}</span>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.75rem' }}>{activeScheme.title}</h2>
+            <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>{activeScheme.description}</p>
+
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+              <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.85rem' }}>{t('eligibilityGuidelines')}</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.85rem' }}>
+                <div><span style={{ fontWeight: 700, color: '#334155' }}>{t('ageBracket')}: </span><span style={{ color: '#475569' }}>{activeScheme.eligibilityCriteria?.minAge || 0}–{activeScheme.eligibilityCriteria?.maxAge || 150} yrs</span></div>
+                <div><span style={{ fontWeight: 700, color: '#334155' }}>{t('maxIncome')}: </span><span style={{ color: '#475569' }}>{activeScheme.eligibilityCriteria?.maxIncome ? `₹${activeScheme.eligibilityCriteria.maxIncome.toLocaleString()}` : 'No Limit'}</span></div>
+                <div><span style={{ fontWeight: 700, color: '#334155' }}>{t('targetOccupations')}: </span><span style={{ color: '#475569' }}>{activeScheme.eligibilityCriteria?.allowedOccupations?.length > 0 ? activeScheme.eligibilityCriteria.allowedOccupations.join(', ') : 'All'}</span></div>
+                <div><span style={{ fontWeight: 700, color: '#334155' }}>{t('socialCategories')}: </span><span style={{ color: '#475569' }}>{activeScheme.eligibilityCriteria?.allowedCategories?.length > 0 ? activeScheme.eligibilityCriteria.allowedCategories.join(', ') : 'All'}</span></div>
+              </div>
+            </div>
+
+            {activeScheme.requiredDocuments?.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.6rem' }}>{t('requiredDocs')}</h4>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                  {activeScheme.requiredDocuments.map((doc, i) => <li key={i} style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.3rem' }}>{doc}</li>)}
+                </ul>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button onClick={() => handleDownload(activeScheme)} disabled={generatingPdf} style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#334155', fontWeight: 700, cursor: generatingPdf ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.875rem' }}>
+                <Download size={15} /> {generatingPdf ? 'Generating PDF...' : t('downloadFormBtn')}
               </button>
-              
-              {/* Only show Apply Online inside modal details if user profile eligibility matches or standard view */}
-              <button
-                onClick={() => { handleApplyOnline(activeScheme._id); setActiveScheme(null); }}
-                className="flex-grow bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-xl flex items-center justify-center space-x-1.5 transition-colors glow-btn text-sm"
-              >
-                <span>{t('applyOnlineBtn')}</span>
-              </button>
-              
-              <button
-                onClick={() => setActiveScheme(null)}
-                className="bg-slate-900 hover:bg-slate-850 text-slate-400 border border-slate-850 px-6 py-3 rounded-xl text-sm font-semibold"
-              >
-                {t('closeBtn')}
-              </button>
+              {!isExpired(activeScheme) && (
+                <button onClick={() => { handleApplyOnline(activeScheme._id); setActiveScheme(null); }} disabled={submittingApp} style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', background: 'linear-gradient(135deg,#2563eb,#4f46e5)', color: '#fff', fontWeight: 700, border: 'none', cursor: submittingApp ? 'not-allowed' : 'pointer', fontSize: '0.875rem' }}>
+                  {t('applyOnlineBtn')}
+                </button>
+              )}
+              {isExpired(activeScheme) && (
+                <div style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', background: '#fee2e2', border: '1px solid #fecaca', color: '#b91c1c', fontWeight: 700, fontSize: '0.875rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                  <CalendarX size={16} /> Applications Closed
+                </div>
+              )}
             </div>
           </div>
         </div>

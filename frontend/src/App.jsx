@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import Schemes from './pages/Schemes';
 import Announcements from './pages/Announcements';
 import Profile from './pages/Profile';
+import AppointmentBooking from './pages/AppointmentBooking';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -54,6 +55,11 @@ const App = () => {
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/book-appointment" element={
+                  <ProtectedRoute>
+                    <AppointmentBooking />
                   </ProtectedRoute>
                 } />
 
