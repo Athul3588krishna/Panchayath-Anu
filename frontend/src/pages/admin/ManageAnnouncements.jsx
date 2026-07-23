@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { Bell, Plus, Edit, Trash2, Save, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 
@@ -7,7 +7,7 @@ const ManageAnnouncements = () => {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Edit / Form State
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
@@ -124,7 +124,7 @@ const ManageAnnouncements = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-8">
-      {/* Header */}
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
@@ -159,7 +159,7 @@ const ManageAnnouncements = () => {
         </div>
       )}
 
-      {/* Notice form */}
+      
       <div className="glass-card p-6 md:p-8 rounded-3xl border border-slate-800">
         <h3 className="text-white font-bold text-lg mb-6">
           {isEditing ? 'Modify Published Bulletin' : 'Draft New Bulletin'}
@@ -213,7 +213,7 @@ const ManageAnnouncements = () => {
         </form>
       </div>
 
-      {/* Bulletins list */}
+      
       <div className="space-y-4">
         <h3 className="text-white font-bold text-lg">Published Bulletins ({notices.length})</h3>
         {loading ? (

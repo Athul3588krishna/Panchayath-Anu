@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 
 const dataDir = path.join(__dirname, '..', 'data');
@@ -30,7 +30,7 @@ class JsonDb {
   async find(query = {}) {
     let items = this.read();
     
-    // Apply filters
+    
     if (query.$or) {
       items = items.filter(item => {
         return query.$or.some(q => {
@@ -116,15 +116,15 @@ class JsonDb {
     if (!item) return null;
     const self = this;
     
-    // Create base object to copy properties
+    
     const wrapped = { ...item };
     
-    // Add instance helper methods
+    
     wrapped.save = async function() {
       const items = self.read();
       const index = items.findIndex(i => String(i._id) === String(wrapped._id));
       
-      // Extract data fields without functions
+      
       const dataToSave = {};
       Object.keys(this).forEach(key => {
         if (typeof this[key] !== 'function') {

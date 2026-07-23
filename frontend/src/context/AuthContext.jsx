@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+﻿import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext();
 
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
             setUser(data);
           } else {
-            // Token expired or invalid
+            
             logout();
           }
         } catch (err) {

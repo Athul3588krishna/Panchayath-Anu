@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { Landmark, Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const Footer = () => {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2.5rem', paddingBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           
-          {/* Brand */}
+          
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
               <div style={{
@@ -35,7 +35,7 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Quick Links */}
+          
           <div>
             <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.875rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Quick Links
@@ -57,7 +57,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Contact */}
+          
           <div>
             <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.875rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Contact
@@ -76,7 +76,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Government Links */}
+          
           <div>
             <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.875rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Government Portals
@@ -99,7 +99,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
+        
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '1.25rem', gap: '1rem', flexWrap: 'wrap' }}>
           <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569' }}>
             © {new Date().getFullYear()} Smart Panchayat Welfare Portal. All rights reserved.

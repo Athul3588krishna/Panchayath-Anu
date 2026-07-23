@@ -5,7 +5,6 @@ import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-// Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -13,26 +12,24 @@ import Schemes from './pages/Schemes';
 import Announcements from './pages/Announcements';
 import Profile from './pages/Profile';
 import AppointmentBooking from './pages/AppointmentBooking';
+import CitizenDashboard from './pages/citizen/Dashboard';
 
-// Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import ManageSchemes from './pages/admin/ManageSchemes';
 import ManageAnnouncements from './pages/admin/ManageAnnouncements';
 import ManageUsers from './pages/admin/ManageUsers';
 import Reports from './pages/admin/Reports';
 
-// Protected Route for Citizens
 const ProtectedRoute = ({ children }) => {
   const { token, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400">Loading...</div>;
   return token ? children : <Navigate to="/login" replace />;
 };
 
-// Admin Route
 const AdminRoute = ({ children }) => {
   const { user, token, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400">Loading...</div>;
-  return token && user && user.role === 'admin' ? children : <Navigate to="/" replace />;
+  return token && user && user.role === 'admin' ? children : <Navigate to="/login#admin" replace />;
 };
 
 const App = () => {
@@ -44,17 +41,22 @@ const App = () => {
             <Navbar />
             <main className="flex-grow flex flex-col">
               <Routes>
-                {/* Public Routes */}
+                
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/schemes" element={<Schemes />} />
                 <Route path="/announcements" element={<Announcements />} />
 
-                {/* Citizen Protected Routes */}
+                
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <CitizenDashboard />
                   </ProtectedRoute>
                 } />
                 <Route path="/book-appointment" element={
@@ -63,7 +65,7 @@ const App = () => {
                   </ProtectedRoute>
                 } />
 
-                {/* Admin Protected Routes */}
+                
                 <Route path="/admin/dashboard" element={
                   <AdminRoute>
                     <AdminDashboard />
@@ -90,7 +92,11 @@ const App = () => {
                   </AdminRoute>
                 } />
 
-                {/* Catch-all Redirect */}
+                {/* Redirect admin root or admin login to admin login portal */}
+                <Route path="/admin" element={<Navigate to="/login#admin" replace />} />
+                <Route path="/admin/login" element={<Navigate to="/login#admin" replace />} />
+
+                {/* Catch-all */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { ShieldCheck, Users, BookOpen, Bell, FileText, CheckCircle, Clock, ThumbsUp, ThumbsDown, Edit2, Check, X, CalendarCheck, TrendingUp, PieChart as PieIcon, BarChart2 } from 'lucide-react';
@@ -26,7 +26,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState({ type: '', text: '' });
 
-  // Chart data
+  
   const [appsByScheme, setAppsByScheme] = useState([]);
   const [appsByStatus, setAppsByStatus] = useState([]);
   const [registrationsByMonth, setRegistrationsByMonth] = useState([]);
@@ -59,9 +59,9 @@ const Dashboard = () => {
         appointmentsCount: appts.length
       });
 
-      // ── Chart Data Processing ──────────────────────────────────
+      
 
-      // 1) Bar chart: applications per scheme
+      
       const schemeCounts = {};
       apps.forEach(app => {
         const name = app.scheme?.title || 'Unknown';
@@ -70,12 +70,12 @@ const Dashboard = () => {
       });
       setAppsByScheme(Object.entries(schemeCounts).map(([name, count]) => ({ name, Applications: count })));
 
-      // 2) Pie chart: status distribution
+      
       const statusCounts = { Pending: 0, 'Under Review': 0, Approved: 0, Rejected: 0 };
       apps.forEach(app => { if (statusCounts[app.status] !== undefined) statusCounts[app.status]++; });
       setAppsByStatus(Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
 
-      // 3) Line chart: citizen registrations by month
+      
       const monthCounts = {};
       citizens.forEach(u => {
         const d = new Date(u.createdAt || Date.now());
@@ -147,7 +147,7 @@ const Dashboard = () => {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem' }}>
 
-      {/* Header */}
+      
       <div style={{ marginBottom: '1.75rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
         <div style={{ background: '#fef9c3', border: '1px solid #fde68a', borderRadius: '12px', padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <ShieldCheck size={22} color="#d97706" />
@@ -165,7 +165,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Stats Grid */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.85rem', marginBottom: '2rem' }}>
         {[
           { label: 'Registered Citizens', value: stats.citizensCount, icon: Users, color: '#2563eb', bg: '#dbeafe' },
@@ -186,7 +186,7 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* ── ANALYTICS CHARTS ─────────────────────────────────────── */}
+      
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
           <TrendingUp size={18} color="#2563eb" />
@@ -194,7 +194,7 @@ const Dashboard = () => {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
 
-          {/* Bar Chart — Applications per Scheme */}
+          
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
               <BarChart2 size={14} color="#2563eb" />
@@ -211,7 +211,7 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Pie Chart — Status Distribution */}
+          
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
               <PieIcon size={14} color="#7c3aed" />
@@ -230,7 +230,7 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Line Chart — Citizen Registrations */}
+          
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
               <TrendingUp size={14} color="#16a34a" />
@@ -249,7 +249,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Module Links */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem', marginBottom: '2rem' }}>
         {adminModules.map((mod) => {
           const Icon = mod.icon;
@@ -268,7 +268,7 @@ const Dashboard = () => {
         })}
       </div>
 
-      {/* ── APPOINTMENT REQUESTS ─────────────────────────────────── */}
+      
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
           <CalendarCheck size={18} color="#16a34a" />
@@ -317,7 +317,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* ── APPLICATION LOGS ─────────────────────────────────────── */}
+      
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
           <FileText size={18} color="#2563eb" />

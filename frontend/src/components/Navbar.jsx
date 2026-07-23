@@ -41,7 +41,7 @@ const Navbar = () => {
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
 
-          {/* Brand */}
+          
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }} onClick={() => { setMenuOpen(false); setProfileOpen(false); }}>
             <div style={{
               background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
@@ -61,7 +61,7 @@ const Navbar = () => {
             </div>
           </Link>
 
-          {/* Desktop Links */}
+          
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }} className="hidden md:flex">
             {navLinks.map(({ path, label }) => (
               <Link
@@ -81,6 +81,22 @@ const Navbar = () => {
                 {label}
               </Link>
             ))}
+            {user?.role === 'citizen' && (
+              <Link
+                to="/dashboard"
+                style={{
+                  padding: '0.45rem 0.9rem',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  color: isActive('/dashboard') ? '#1d4ed8' : '#475569',
+                  background: isActive('/dashboard') ? '#dbeafe' : 'transparent',
+                }}
+              >
+                {language === 'ml' ? 'ഡാഷ്‌ബോർഡ്' : 'Dashboard'}
+              </Link>
+            )}
             {user?.role === 'admin' && (
               <Link
                 to="/admin/dashboard"
@@ -99,9 +115,9 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Right Actions */}
+          
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {/* Language Toggle */}
+            
             <button
               onClick={toggleLanguage}
               title={language === 'en' ? 'Switch to Malayalam' : 'Switch to English'}
@@ -169,6 +185,21 @@ const Navbar = () => {
                       <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '2px 0 0' }}>{user?.email}</p>
                     </div>
                     <Link
+                      to="/dashboard"
+                      onClick={() => setProfileOpen(false)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.6rem',
+                        padding: '0.55rem 0.75rem', borderRadius: '8px',
+                        color: '#334155', fontSize: '0.85rem', fontWeight: 600,
+                        textDecoration: 'none', transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <LayoutDashboard size={15} color="#2563eb" />
+                      {language === 'ml' ? 'ഡാഷ്‌ബോർഡ്' : 'Dashboard'}
+                    </Link>
+                    <Link
                       to="/profile"
                       onClick={() => setProfileOpen(false)}
                       style={{
@@ -180,7 +211,7 @@ const Navbar = () => {
                       onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <User size={15} color="#2563eb" />
+                      <User size={15} color="#16a34a" />
                       {t('profile')}
                     </Link>
                     {user?.role === 'admin' && (
@@ -246,7 +277,7 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Mobile Hamburger */}
+            
             <button
               onClick={() => { setMenuOpen(!menuOpen); setProfileOpen(false); }}
               style={{
@@ -262,7 +293,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        
         {menuOpen && (
           <div style={{
             borderTop: '1px solid #f1f5f9',
@@ -294,6 +325,11 @@ const Navbar = () => {
             )}
             {token ? (
               <>
+                {user?.role === 'citizen' && (
+                  <Link to="/dashboard" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '0.6rem 0.75rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none', color: '#475569' }}>
+                    {language === 'ml' ? 'ഡാഷ്‌ബോർഡ്' : 'Dashboard'}
+                  </Link>
+                )}
                 <Link to="/profile" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '0.6rem 0.75rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none', color: '#475569' }}>
                   {t('profile')}
                 </Link>

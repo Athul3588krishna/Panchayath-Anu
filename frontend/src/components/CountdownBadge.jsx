@@ -1,11 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Clock, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
 
-/**
- * CountdownBadge — displays expiry status of a scheme
- * Props:
- *   expiresAt: Date string | null  (null = always open)
- */
 const CountdownBadge = ({ expiresAt }) => {
   const [timeLeft, setTimeLeft] = useState(null);
 
@@ -22,11 +17,11 @@ const CountdownBadge = ({ expiresAt }) => {
     };
 
     compute();
-    const id = setInterval(compute, 60000); // refresh every minute
+    const id = setInterval(compute, 60000); 
     return () => clearInterval(id);
   }, [expiresAt]);
 
-  // No expiry
+  
   if (!expiresAt || timeLeft === null) {
     return (
       <span style={{
@@ -43,7 +38,7 @@ const CountdownBadge = ({ expiresAt }) => {
     );
   }
 
-  // Expired
+  
   if (timeLeft.diffMs <= 0) {
     return (
       <span style={{
@@ -60,7 +55,7 @@ const CountdownBadge = ({ expiresAt }) => {
     );
   }
 
-  // Expiring very soon (≤ 3 days) — urgent red pulse
+  
   if (timeLeft.diffDays <= 3) {
     return (
       <span style={{
@@ -80,7 +75,7 @@ const CountdownBadge = ({ expiresAt }) => {
     );
   }
 
-  // Expiring within 7 days — amber warning
+  
   if (timeLeft.diffDays <= 7) {
     return (
       <span style={{
@@ -97,7 +92,7 @@ const CountdownBadge = ({ expiresAt }) => {
     );
   }
 
-  // Normal — blue open badge with date
+  
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '0.3rem',

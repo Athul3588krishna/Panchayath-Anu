@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const SchemeSchema = new mongoose.Schema({
   title: {
@@ -27,15 +27,15 @@ const SchemeSchema = new mongoose.Schema({
     },
     maxIncome: {
       type: Number,
-      default: null // null means no upper limit
+      default: null 
     },
     allowedOccupations: {
       type: [String],
-      default: [] // Empty array means all occupations allowed
+      default: [] 
     },
     allowedCategories: {
       type: [String],
-      default: [] // Empty array means all categories allowed (General, OBC, SC, ST)
+      default: [] 
     }
   },
   requiredDocuments: {
@@ -44,7 +44,7 @@ const SchemeSchema = new mongoose.Schema({
   },
   formUrl: {
     type: String,
-    default: '' // Path to the uploaded application form PDF/DOC
+    default: '' 
   },
   viewsCount: {
     type: Number,
@@ -56,7 +56,7 @@ const SchemeSchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    default: null // null = no expiry / always open
+    default: null 
   },
   createdAt: {
     type: Date,
@@ -75,7 +75,7 @@ class SchemeWrapper {
     }
     Object.assign(this, data);
     this.save = async function() {
-      // If updating, save to existing file database
+      
       if (this._id) {
         const items = jsonSchemeDb.read();
         const index = items.findIndex(i => String(i._id) === String(this._id));

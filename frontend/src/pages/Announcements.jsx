@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Bell, Calendar, Megaphone, ShieldAlert, RefreshCw } from 'lucide-react';
@@ -27,7 +27,7 @@ const Announcements = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 w-full space-y-8">
-      {/* Header */}
+      
       <div className="flex items-center space-x-3">
         <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
           <Megaphone className="h-6 w-6" />
@@ -38,7 +38,7 @@ const Announcements = () => {
         </div>
       </div>
 
-      {/* Main Notice Stack */}
+      
       {loading ? (
         <div className="text-center py-16 text-slate-400 flex flex-col items-center">
           <RefreshCw className="h-8 w-8 animate-spin text-emerald-450 mb-2" />

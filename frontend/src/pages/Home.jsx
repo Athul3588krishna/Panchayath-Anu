@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Landmark, ArrowRight, BookOpen, BellRing, Download, Award, ShieldCheck, Users, ChevronRight, Leaf, Home as HomeIcon, GraduationCap } from 'lucide-react';
 import { API_BASE_URL } from '../context/AuthContext';
@@ -43,16 +43,16 @@ const Home = () => {
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh' }}>
 
-      {/* ── HERO ── */}
+      
       <section className="hero-section" style={{ padding: '5rem 1.5rem 6rem' }}>
         <div className="hero-grid" />
 
-        {/* Floating orbs */}
+        
         <div className="hero-orb" style={{ position: 'absolute', top: '8%', right: '8%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div className="hero-orb-delay" style={{ position: 'absolute', bottom: '10%', left: '5%', width: 250, height: 250, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          {/* Tagline pill */}
+          
           {importantNotices.length > 0 && (
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
@@ -106,7 +106,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── STATS STRIP ── */}
+      
       <div style={{ maxWidth: 1100, margin: '-2.5rem auto 0', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           {statItems.map((s, i) => {
@@ -135,7 +135,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* ── CATEGORIES ── */}
+      
       <section style={{ maxWidth: 1100, margin: '4rem auto', padding: '0 1.5rem' }}>
         <div style={{ marginBottom: '2rem' }}>
           <div className="section-label" style={{ marginBottom: '0.6rem' }}>{language === 'ml' ? 'വിഭാഗം' : 'BROWSE BY CATEGORY'}</div>
@@ -186,7 +186,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
+      
       <section style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)', padding: '4rem 1.5rem' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
@@ -219,7 +219,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── NOTICE ALERTS ── */}
+      
       {importantNotices.length > 0 && (
         <section style={{ maxWidth: 1100, margin: '3.5rem auto', padding: '0 1.5rem' }}>
           <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -258,7 +258,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* ── CTA ASSISTANCE ── */}
+      
       <section style={{ maxWidth: 1100, margin: '0 auto 4rem', padding: '0 1.5rem' }}>
         <div style={{
           background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',

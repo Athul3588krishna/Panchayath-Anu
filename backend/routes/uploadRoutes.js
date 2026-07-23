@@ -1,17 +1,15 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { protect, admin } = require('../middleware/authMiddleware');
 
-// Ensure uploads directory exists
 const uploadDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Storage Configuration
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, uploadDir);
@@ -24,7 +22,6 @@ const storage = multer.diskStorage({
   }
 });
 
-// File validation
 function checkFileType(file, cb) {
   const filetypes = /pdf|doc|docx|jpg|jpeg|png/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -44,15 +41,12 @@ const upload = multer({
   }
 });
 
-// @desc    Upload application form or scheme document
-// @route   POST /api/upload
-// @access  Private/Admin
 router.post('/', protect, admin, upload.single('document'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
   
-  // Return the relative filepath so it can be saved in the database
+  
   const relativePath = `/uploads/${req.file.filename}`;
   res.json({
     message: 'File uploaded successfully',

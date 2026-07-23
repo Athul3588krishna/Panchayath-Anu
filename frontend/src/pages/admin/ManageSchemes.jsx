@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { BookOpen, Edit, Trash2, Save, PlusCircle, MinusCircle, FileText, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import CountdownBadge from '../../components/CountdownBadge';
@@ -8,11 +8,11 @@ const ManageSchemes = () => {
   const [schemes, setSchemes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Edit / Form State
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   
-  // Scheme form inputs
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Agriculture');
@@ -21,12 +21,12 @@ const ManageSchemes = () => {
   const [maxAge, setMaxAge] = useState('120');
   const [maxIncome, setMaxIncome] = useState('');
   const [allowedOccString, setAllowedOccString] = useState('');
-  const [allowedCatList, setAllowedCatList] = useState([]); // General, OBC, SC, ST
+  const [allowedCatList, setAllowedCatList] = useState([]); 
 
   const [docInputs, setDocInputs] = useState(['']);
-  const [expiresAt, setExpiresAt] = useState(''); // YYYY-MM-DD string or ''
+  const [expiresAt, setExpiresAt] = useState(''); 
 
-  // File upload state
+  
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedPath, setUploadedPath] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -64,7 +64,7 @@ const ManageSchemes = () => {
     }
   };
 
-  // Dynamic document actions
+  
   const addDocField = () => setDocInputs(prev => [...prev, '']);
   const removeDocField = (idx) => {
     if (docInputs.length > 1) {
@@ -77,7 +77,7 @@ const ManageSchemes = () => {
     setDocInputs(next);
   };
 
-  // Upload file to Express upload endpoint
+  
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -112,7 +112,7 @@ const ManageSchemes = () => {
     }
   };
 
-  // Form submission: Create or Update
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSuccess('');
@@ -122,10 +122,10 @@ const ManageSchemes = () => {
       return setFormError('Title, description and category are required.');
     }
 
-    // Clean dynamic doc list
+    
     const requiredDocs = docInputs.filter(d => d.trim() !== '');
 
-    // Parse target occupations
+    
     const allowedOccupations = allowedOccString
       ? allowedOccString.split(',').map(o => o.trim()).filter(o => o !== '')
       : [];
@@ -194,7 +194,7 @@ const ManageSchemes = () => {
     setAllowedCatList(scheme.eligibilityCriteria?.allowedCategories || []);
     setDocInputs(scheme.requiredDocuments && scheme.requiredDocuments.length > 0 ? scheme.requiredDocuments : ['']);
     setUploadedPath(scheme.formUrl || '');
-    // Prefill expiry date picker (convert ISO → YYYY-MM-DD)
+    
     setExpiresAt(scheme.expiresAt ? new Date(scheme.expiresAt).toISOString().split('T')[0] : '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -239,7 +239,7 @@ const ManageSchemes = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-8">
-      {/* Header */}
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
@@ -260,7 +260,7 @@ const ManageSchemes = () => {
         )}
       </div>
 
-      {/* Success/Error Feedback */}
+      
       {formSuccess && (
         <div className="bg-emerald-950/40 border border-emerald-950 text-emerald-350 px-4 py-3 rounded-xl text-sm flex items-start space-x-2">
           <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400" />
@@ -275,7 +275,7 @@ const ManageSchemes = () => {
         </div>
       )}
 
-      {/* Scheme Form Panel */}
+      
       <div className="glass-card p-6 md:p-8 rounded-3xl border border-slate-800">
         <h3 className="text-white font-extrabold text-lg mb-6 flex items-center space-x-2">
           <span>{isEditing ? 'Edit Welfare Scheme' : 'Register New Welfare Scheme'}</span>
@@ -284,7 +284,7 @@ const ManageSchemes = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* Left: General Specs */}
+            
             <div className="md:col-span-2 space-y-4">
               <div>
                 <label className="block text-slate-300 text-xs font-semibold mb-2">Scheme Name *</label>
@@ -342,7 +342,7 @@ const ManageSchemes = () => {
                   </div>
                 </div>
 
-                {/* Expiry Date */}
+                
                 <div>
                   <label className="block text-slate-300 text-xs font-semibold mb-2 flex items-center gap-1">
                     <Calendar size={13} className="text-amber-400" />
@@ -368,7 +368,7 @@ const ManageSchemes = () => {
               </div>
             </div>
 
-            {/* Right: Eligibility Details */}
+            
             <div className="space-y-4 bg-slate-900/40 p-5 rounded-2xl border border-slate-850">
               <h4 className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">Screening Criteria</h4>
 
@@ -434,7 +434,7 @@ const ManageSchemes = () => {
             </div>
           </div>
 
-          {/* Document attachment row */}
+          
           <div>
             <label className="block text-slate-300 text-xs font-semibold mb-2">Required Document Enclosures</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -482,7 +482,7 @@ const ManageSchemes = () => {
         </form>
       </div>
 
-      {/* Directory of current schemes for management */}
+      
       <div className="space-y-4">
         <h3 className="text-white font-bold text-lg">Current Welfare Schemes ({schemes.length})</h3>
         {loading ? (

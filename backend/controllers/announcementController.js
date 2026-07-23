@@ -1,8 +1,5 @@
-const Announcement = require('../models/Announcement');
+﻿const Announcement = require('../models/Announcement');
 
-// @desc    Get all announcements
-// @route   GET /api/announcements
-// @access  Public
 const getAnnouncements = async (req, res) => {
   try {
     const announcements = await Announcement.find({}).sort({ date: -1 });
@@ -12,9 +9,6 @@ const getAnnouncements = async (req, res) => {
   }
 };
 
-// @desc    Create new announcement (Admin only)
-// @route   POST /api/announcements
-// @access  Private/Admin
 const createAnnouncement = async (req, res) => {
   const { title, content, isImportant } = req.body;
 
@@ -32,9 +26,6 @@ const createAnnouncement = async (req, res) => {
   }
 };
 
-// @desc    Update an announcement (Admin only)
-// @route   PUT /api/announcements/:id
-// @access  Private/Admin
 const updateAnnouncement = async (req, res) => {
   const { title, content, isImportant } = req.body;
 
@@ -56,9 +47,6 @@ const updateAnnouncement = async (req, res) => {
   }
 };
 
-// @desc    Delete an announcement (Admin only)
-// @route   DELETE /api/announcements/:id
-// @access  Private/Admin
 const deleteAnnouncement = async (req, res) => {
   try {
     const announcement = await Announcement.findById(req.params.id);

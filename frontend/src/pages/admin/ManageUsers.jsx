@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { Users, Trash2, Edit, Save, Shield, User, X, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -7,7 +7,7 @@ const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Edit State
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   
@@ -133,7 +133,7 @@ const ManageUsers = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-8">
-      {/* Header */}
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
@@ -154,7 +154,7 @@ const ManageUsers = () => {
         )}
       </div>
 
-      {/* Success/Error Alerts */}
+      
       {feedbackSuccess && (
         <div className="bg-emerald-950/40 border border-emerald-950 text-emerald-350 px-4 py-3 rounded-xl text-sm flex items-start space-x-2">
           <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400" />
@@ -169,7 +169,7 @@ const ManageUsers = () => {
         </div>
       )}
 
-      {/* User profile edit form (appears only when editing is active) */}
+      
       {isEditing && (
         <div className="glass-card p-6 md:p-8 rounded-3xl border border-slate-800">
           <h3 className="text-white font-bold text-lg mb-6">Edit Profile for {name}</h3>
@@ -276,7 +276,7 @@ const ManageUsers = () => {
         </div>
       )}
 
-      {/* Directory Table */}
+      
       <div className="glass-card p-6 rounded-3xl border border-slate-800">
         <h3 className="text-white font-bold text-lg mb-4">Registered Accounts</h3>
         

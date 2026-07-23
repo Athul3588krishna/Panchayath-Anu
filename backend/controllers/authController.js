@@ -1,17 +1,13 @@
-const User = require('../models/User');
+﻿const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Generate JWT token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'super_secret_key_change_me', {
     expiresIn: '30d',
   });
 };
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
 const registerUser = async (req, res) => {
   const { name, email, password, role, age, annualIncome, occupation, category } = req.body;
 
@@ -56,9 +52,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// @desc    Authenticate user & get token
-// @route   POST /api/auth/login
-// @access  Public
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -85,9 +78,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Get user profile
-// @route   GET /api/auth/profile
-// @access  Private
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -111,9 +101,6 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// @desc    Update user profile
-// @route   PUT /api/auth/profile
-// @access  Private
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -152,9 +139,6 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-// @desc    Get all users
-// @route   GET /api/auth/users
-// @access  Private/Admin
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find({}).select('-password');
@@ -164,9 +148,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// @desc    Update user role/details (Admin only)
-// @route   PUT /api/auth/users/:id
-// @access  Private/Admin
 const updateUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -199,9 +180,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-// @desc    Delete user (Admin only)
-// @route   DELETE /api/auth/users/:id
-// @access  Private/Admin
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);

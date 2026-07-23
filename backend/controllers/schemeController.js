@@ -1,8 +1,5 @@
-const Scheme = require('../models/Scheme');
+﻿const Scheme = require('../models/Scheme');
 
-// @desc    Get all schemes with filtering & searching
-// @route   GET /api/schemes
-// @access  Public
 const getSchemes = async (req, res) => {
   const { category, search } = req.query;
   let query = {};
@@ -26,9 +23,6 @@ const getSchemes = async (req, res) => {
   }
 };
 
-// @desc    Get single scheme details & increment views
-// @route   GET /api/schemes/:id
-// @access  Public
 const getSchemeById = async (req, res) => {
   try {
     const scheme = await Scheme.findById(req.params.id);
@@ -45,9 +39,6 @@ const getSchemeById = async (req, res) => {
   }
 };
 
-// @desc    Create new scheme (Admin only)
-// @route   POST /api/schemes
-// @access  Private/Admin
 const createScheme = async (req, res) => {
   const {
     title,
@@ -83,9 +74,6 @@ const createScheme = async (req, res) => {
   }
 };
 
-// @desc    Update an existing scheme (Admin only)
-// @route   PUT /api/schemes/:id
-// @access  Private/Admin
 const updateScheme = async (req, res) => {
   const {
     title,
@@ -117,7 +105,7 @@ const updateScheme = async (req, res) => {
 
       scheme.requiredDocuments = requiredDocuments || scheme.requiredDocuments;
       scheme.formUrl = formUrl !== undefined ? formUrl : scheme.formUrl;
-      // Update expiresAt: allow setting to null (clear deadline) or a new date
+      
       if (expiresAt !== undefined) {
         scheme.expiresAt = expiresAt ? new Date(expiresAt) : null;
       }
@@ -132,9 +120,6 @@ const updateScheme = async (req, res) => {
   }
 };
 
-// @desc    Delete a scheme (Admin only)
-// @route   DELETE /api/schemes/:id
-// @access  Private/Admin
 const deleteScheme = async (req, res) => {
   try {
     const scheme = await Scheme.findById(req.params.id);
@@ -150,9 +135,6 @@ const deleteScheme = async (req, res) => {
   }
 };
 
-// @desc    Increment scheme downloads
-// @route   POST /api/schemes/:id/download
-// @access  Public
 const incrementDownloads = async (req, res) => {
   try {
     const scheme = await Scheme.findById(req.params.id);
@@ -169,9 +151,6 @@ const incrementDownloads = async (req, res) => {
   }
 };
 
-// @desc    Check eligibility for all schemes based on user inputs
-// @route   POST /api/schemes/check-eligibility
-// @access  Public
 const checkEligibility = async (req, res) => {
   const { age, annualIncome, occupation, category } = req.body;
 
@@ -183,7 +162,7 @@ const checkEligibility = async (req, res) => {
       let isEligible = true;
       let reasons = [];
 
-      // 1. Age check
+      
       if (age !== undefined && age !== null && age !== '') {
         const userAge = Number(age);
         if (userAge < criteria.minAge) {
@@ -196,7 +175,7 @@ const checkEligibility = async (req, res) => {
         }
       }
 
-      // 2. Income check
+      
       if (annualIncome !== undefined && annualIncome !== null && annualIncome !== '') {
         const userIncome = Number(annualIncome);
         if (criteria.maxIncome && userIncome > criteria.maxIncome) {
@@ -205,9 +184,9 @@ const checkEligibility = async (req, res) => {
         }
       }
 
-      // 3. Occupation check
+      
       if (occupation && criteria.allowedOccupations && criteria.allowedOccupations.length > 0) {
-        // Normalize occupation checks (case-insensitive trim)
+        
         const userOcc = occupation.trim().toLowerCase();
         const matchesOcc = criteria.allowedOccupations.some(
           occ => occ.trim().toLowerCase() === userOcc
@@ -218,7 +197,7 @@ const checkEligibility = async (req, res) => {
         }
       }
 
-      // 4. Category check
+      
       if (category && criteria.allowedCategories && criteria.allowedCategories.length > 0) {
         const userCat = category.trim().toLowerCase();
         const matchesCat = criteria.allowedCategories.some(

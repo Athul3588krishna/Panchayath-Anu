@@ -1,7 +1,7 @@
 [
   {
-    "_id": "yxacxo48r",
-    "createdAt": "2026-07-08T18:35:32.751Z",
+    "_id": "c689okf19",
+    "createdAt": "2026-07-23T15:51:10.462Z",
     "title": "Poultry Farming Assistance Scheme",
     "description": "Provides a 50% capital subsidy on setup costs for poultry farms up to 500 birds, including free training, veterinarian visits, and starter feed bags.",
     "category": "Animal Husbandry",
@@ -20,11 +20,12 @@
     ],
     "formUrl": "",
     "viewsCount": 142,
-    "downloadsCount": 38
+    "downloadsCount": 38,
+    "expiresAt": "2026-07-28T15:51:10.315Z"
   },
   {
-    "_id": "drrnqkt3f",
-    "createdAt": "2026-07-08T18:35:32.751Z",
+    "_id": "vi6e9hg80",
+    "createdAt": "2026-07-23T15:51:10.462Z",
     "title": "BPL Goat Farming Subsidy",
     "description": "Distributes a livestock unit of 5 goats (4 female + 1 male) to below-poverty-line families. Covers 90% subsidy for SC/ST and 75% for OBC categories to encourage rural self-employment.",
     "category": "Animal Husbandry",
@@ -47,11 +48,12 @@
     ],
     "formUrl": "",
     "viewsCount": 205,
-    "downloadsCount": 64
+    "downloadsCount": 64,
+    "expiresAt": "2026-08-12T15:51:10.315Z"
   },
   {
-    "_id": "agiax2io3",
-    "createdAt": "2026-07-08T18:35:32.751Z",
+    "_id": "oxvlnqt47",
+    "createdAt": "2026-07-23T15:51:10.462Z",
     "title": "Organic Farming & Vermicompost Subsidies",
     "description": "Financial assistance of ₹8,000 for constructing a vermicompost pit and free distribution of organic soil conditioners to promote eco-friendly agriculture.",
     "category": "Agriculture",
@@ -73,11 +75,12 @@
     ],
     "formUrl": "",
     "viewsCount": 97,
-    "downloadsCount": 19
+    "downloadsCount": 19,
+    "expiresAt": null
   },
   {
-    "_id": "fk5o1vf7q",
-    "createdAt": "2026-07-08T18:35:32.751Z",
+    "_id": "3e2qhz019",
+    "createdAt": "2026-07-23T15:51:10.462Z",
     "title": "Free Saplings and Plant Distribution Drive",
     "description": "Free distribution of high-yield fruit-bearing plants (Mango, Coconut, Jackfruit) and timber saplings to promote green cover and long-term local farm income.",
     "category": "Agriculture",
@@ -94,11 +97,12 @@
     ],
     "formUrl": "",
     "viewsCount": 78,
-    "downloadsCount": 5
+    "downloadsCount": 5,
+    "expiresAt": "2026-07-21T15:51:10.315Z"
   },
   {
-    "_id": "g76c434py",
-    "createdAt": "2026-07-08T18:35:32.751Z",
+    "_id": "jd0woqpcb",
+    "createdAt": "2026-07-23T15:51:10.462Z",
     "title": "Panchayat Rural Housing Scheme (PMAY-G)",
     "description": "Provides a financial assistance grant of ₹1,20,000 in plains and ₹1,30,000 in hilly/difficult areas for the construction of a permanent (pucca) house for homeless citizens.",
     "category": "Housing",
@@ -118,11 +122,12 @@
     ],
     "formUrl": "",
     "viewsCount": 310,
-    "downloadsCount": 112
+    "downloadsCount": 112,
+    "expiresAt": "2026-09-06T15:51:10.315Z"
   },
   {
-    "_id": "1xi0sxk4b",
-    "createdAt": "2026-07-08T18:35:32.751Z",
+    "_id": "35sw1yk3o",
+    "createdAt": "2026-07-23T15:51:10.462Z",
     "title": "Panchayat Higher Education Merit Scholarship",
     "description": "Annual scholarship of ₹10,000 to assist high-performing students who scored above 80% marks in Class 10/12 board exams, belonging to low-income rural households.",
     "category": "Education",
@@ -143,6 +148,7 @@
     ],
     "formUrl": "",
     "viewsCount": 184,
-    "downloadsCount": 45
+    "downloadsCount": 45,
+    "expiresAt": "2026-07-26T15:51:10.315Z"
   }
 ]

@@ -109,7 +109,7 @@ const Schemes = () => {
     }
   }, [user, searchParams]);
 
-  // ─── PDF DOWNLOAD ─────────────────────────────────────────────────
+  
   const handleDownload = async (scheme) => {
     setGeneratingPdf(true);
     try {
@@ -119,7 +119,7 @@ const Schemes = () => {
       if (scheme.formUrl && scheme.formUrl.startsWith('http')) {
         window.open(scheme.formUrl, '_blank');
       } else {
-        // Generate branded PDF
+        
         await generateApplicationPDF(scheme, user);
       }
     } catch (err) {
@@ -207,7 +207,7 @@ const Schemes = () => {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.5rem' }} className="schemes-grid">
-        {/* Sidebar — Eligibility Checker */}
+        
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', height: 'fit-content', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.35rem' }}>{t('interactiveScreening')}</h3>
           <p style={{ color: '#64748b', fontSize: '0.8rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>{t('screeningSubText')}</p>
@@ -249,9 +249,9 @@ const Schemes = () => {
           </form>
         </div>
 
-        {/* Main Content */}
+        
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {/* Search + Tabs */}
+          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ position: 'relative', flex: 1 }}>
@@ -270,38 +270,61 @@ const Schemes = () => {
             </div>
           </div>
 
-          {/* Results */}
+          
           {loading ? (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#64748b', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
               <RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', color: '#2563eb' }} />
               <span>Loading schemes...</span>
             </div>
           ) : eligibilityChecked ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('screeningResults')} ({eligibleSchemes.length})</span>
-                <button onClick={() => { setEligibilityChecked(false); setEligibleSchemes([]); }} style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>{t('clearResults')}</button>
-              </div>
-              {eligibleSchemes.map(item => {
+            (() => {
+              const filtered = eligibleSchemes.filter(item => {
                 const fullScheme = schemes.find(s => s._id === item.scheme._id) || item.scheme;
-                const badge = item.isEligible
-                  ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '999px', padding: '0.18rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}><CheckCircle2 size={11} />{t('eligible')}</span>
-                  : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '999px', padding: '0.18rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}><XCircle size={11} />{t('notEligible')}</span>;
-                return (
-                  <div key={item.scheme._id}>
-                    {schemeCard(fullScheme, badge)}
-                    {!item.isEligible && item.reasons?.length > 0 && (
-                      <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', padding: '0.75rem 1rem', marginTop: '0.4rem' }}>
-                        <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#c2410c', margin: '0 0 0.4rem', textTransform: 'uppercase' }}>Unmet Requirements:</p>
-                        <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
-                          {item.reasons.map((r, i) => <li key={i} style={{ fontSize: '0.82rem', color: '#9a3412' }}>{r}</li>)}
-                        </ul>
-                      </div>
-                    )}
+                const matchesCategory = selectedCategory === 'All' || fullScheme.category === selectedCategory;
+                const matchesSearch = !searchQuery.trim() || 
+                  fullScheme.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  fullScheme.description.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+              });
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {t('screeningResults')} ({filtered.length})
+                    </span>
+                    <button onClick={() => { setEligibilityChecked(false); setEligibleSchemes([]); }} style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
+                      {t('clearResults')}
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                  {filtered.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                      <p>{language === 'ml' ? 'ഈ വിഭാഗത്തിൽ അർഹതയുള്ള പദ്ധതികൾ ഒന്നും തന്നെയില്ല.' : 'No eligible schemes found in this category.'}</p>
+                    </div>
+                  ) : (
+                    filtered.map(item => {
+                      const fullScheme = schemes.find(s => s._id === item.scheme._id) || item.scheme;
+                      const badge = item.isEligible
+                        ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '999px', padding: '0.18rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}><CheckCircle2 size={11} />{t('eligible')}</span>
+                        : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '999px', padding: '0.18rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}><XCircle size={11} />{t('notEligible')}</span>;
+                      return (
+                        <div key={item.scheme._id}>
+                          {schemeCard(fullScheme, badge)}
+                          {!item.isEligible && item.reasons?.length > 0 && (
+                            <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', padding: '0.75rem 1rem', marginTop: '0.4rem' }}>
+                              <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#c2410c', margin: '0 0 0.4rem', textTransform: 'uppercase' }}>Unmet Requirements:</p>
+                              <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                                {item.reasons.map((r, i) => <li key={i} style={{ fontSize: '0.82rem', color: '#9a3412' }}>{r}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              );
+            })()
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               {schemes.length === 0 ? (
@@ -315,7 +338,7 @@ const Schemes = () => {
         </div>
       </div>
 
-      {/* Detail Modal */}
+      
       {activeScheme && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }} onClick={e => { if (e.target === e.currentTarget) setActiveScheme(null); }}>
           <div style={{ background: '#fff', borderRadius: '20px', maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', position: 'relative', boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>

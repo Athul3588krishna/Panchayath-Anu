@@ -6,14 +6,13 @@ import { Calendar, Clock, FileText, CheckCircle, AlertCircle, ChevronLeft, Loade
 
 const TIME_SLOTS = ['10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '03:00 PM', '04:00 PM'];
 
-// Get array of next N weekdays (no Sundays)
 const getAvailableDates = (count = 21) => {
   const dates = [];
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
-  cursor.setDate(cursor.getDate() + 1); // start from tomorrow
+  cursor.setDate(cursor.getDate() + 1); 
   while (dates.length < count) {
-    if (cursor.getDay() !== 0) { // skip Sundays (0)
+    if (cursor.getDay() !== 0) { 
       dates.push(new Date(cursor));
     }
     cursor.setDate(cursor.getDate() + 1);
@@ -21,12 +20,20 @@ const getAvailableDates = (count = 21) => {
   return dates;
 };
 
+const toLocalYYYYMMDD = (date) => {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const AppointmentBooking = () => {
   const { token, user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1); // 1: pick date, 2: pick slot, 3: purpose, 4: confirm
+  const [step, setStep] = useState(1); 
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [purpose, setPurpose] = useState('');
@@ -47,13 +54,13 @@ const AppointmentBooking = () => {
     'Other'
   ];
 
-  // Fetch booked slots when a date is selected
+  
   useEffect(() => {
     if (!selectedDate) return;
     const fetchBooked = async () => {
       setLoadingSlots(true);
       try {
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        const dateStr = toLocalYYYYMMDD(selectedDate);
         const res = await fetch(`${API_BASE_URL}/appointments/booked-slots?date=${dateStr}`);
         const data = await res.json();
         setBookedSlots(Array.isArray(data) ? data : []);
@@ -75,7 +82,7 @@ const AppointmentBooking = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
-          date: selectedDate.toISOString(),
+          date: toLocalYYYYMMDD(selectedDate),
           timeSlot: selectedSlot,
           purpose
         })
@@ -138,7 +145,7 @@ const AppointmentBooking = () => {
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '2.5rem 1.5rem' }}>
-      {/* Header */}
+      
       <div style={{ marginBottom: '2rem' }}>
         <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, marginBottom: '1rem' }}>
           <ChevronLeft size={16} /> {language === 'ml' ? 'തിരിച്ചു പോകൂ' : 'Back'}
@@ -153,7 +160,7 @@ const AppointmentBooking = () => {
         </p>
       </div>
 
-      {/* Step Indicator */}
+      
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem', gap: '0' }}>
         {['Select Date', 'Choose Time', 'Purpose', 'Confirm'].map((label, i) => (
           <React.Fragment key={i}>
@@ -175,10 +182,10 @@ const AppointmentBooking = () => {
         ))}
       </div>
 
-      {/* Card Panel */}
+      
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         
-        {/* STEP 1 — Date Picker */}
+        
         {step === 1 && (
           <div>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -215,7 +222,7 @@ const AppointmentBooking = () => {
           </div>
         )}
 
-        {/* STEP 2 — Time Slot */}
+        
         {step === 2 && (
           <div>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -256,7 +263,7 @@ const AppointmentBooking = () => {
           </div>
         )}
 
-        {/* STEP 3 — Purpose */}
+        
         {step === 3 && (
           <div>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -297,7 +304,7 @@ const AppointmentBooking = () => {
           </div>
         )}
 
-        {/* STEP 4 — Confirm */}
+        
         {step === 4 && (
           <div>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.5rem' }}>

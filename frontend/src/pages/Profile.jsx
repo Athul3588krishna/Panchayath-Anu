@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -24,11 +24,11 @@ const Profile = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [eligibleCount, setEligibleCount] = useState(0);
 
-  // Online Applications State
+  
   const [applications, setApplications] = useState([]);
   const [appsLoading, setAppsLoading] = useState(true);
 
-  // Appointments State
+  
   const [appointments, setAppointments] = useState([]);
   const [apptsLoading, setApptsLoading] = useState(true);
 
@@ -43,7 +43,7 @@ const Profile = () => {
     }
   }, [user]);
 
-  // Fetch count of eligible schemes
+  
   useEffect(() => {
     const checkCount = async () => {
       if (!user) return;
@@ -72,7 +72,7 @@ const Profile = () => {
     checkCount();
   }, [user]);
 
-  // Fetch citizen applications
+  
   const fetchMyApplications = async () => {
     if (!token) return;
     try {
@@ -96,7 +96,7 @@ const Profile = () => {
     fetchMyApplications();
   }, [token]);
 
-  // Fetch citizen appointments
+  
   useEffect(() => {
     if (!token) { setApptsLoading(false); return; }
     const fetchMyAppointments = async () => {
@@ -110,7 +110,6 @@ const Profile = () => {
     };
     fetchMyAppointments();
   }, [token]);
-
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -158,7 +157,7 @@ const Profile = () => {
     'Other'
   ];
 
-  // Helper for status badges
+  
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Approved':
@@ -194,7 +193,7 @@ const Profile = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Left panel - Eligibility Summary */}
+      
       <div className="space-y-6">
         <div className="glass-card p-6 rounded-3xl text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl"></div>
@@ -235,10 +234,10 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Right panel - Edit Profile & Application List */}
+      
       <div className="lg:col-span-2 space-y-8">
         
-        {/* Profile Settings */}
+        
         <div className="glass-card p-6 md:p-8 rounded-3xl border border-slate-800">
           <h3 className="text-white font-bold text-xl mb-6">{t('interactiveScreening')}</h3>
 
@@ -398,7 +397,7 @@ const Profile = () => {
           </form>
         </div>
 
-        {/* Online Applications Tracker */}
+        
         <div className="glass-card p-6 md:p-8 rounded-3xl border border-slate-800">
           <h3 className="text-white font-bold text-xl mb-4 flex items-center space-x-2">
             <FileText className="h-5 w-5 text-emerald-450" />
@@ -451,7 +450,7 @@ const Profile = () => {
 
       </div>
 
-        {/* ── MY APPOINTMENTS ── */}
+        
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

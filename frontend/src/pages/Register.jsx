@@ -7,12 +7,12 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Basic Account Credentials
+  
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Eligibility Profile Settings
+  
   const [age, setAge] = useState('');
   const [annualIncome, setAnnualIncome] = useState('');
   const [occupation, setOccupation] = useState('');
@@ -35,13 +35,13 @@ const Register = () => {
         name,
         email,
         password,
-        role: 'citizen', // Defaults to citizen
+        role: 'citizen', 
         age: age ? Number(age) : null,
         annualIncome: annualIncome ? Number(annualIncome) : null,
         occupation: occupation || '',
         category: category || ''
       });
-      navigate('/profile');
+      navigate('/dashboard');
     } catch (err) {
       setFormError(err.message || 'Registration failed. Try a different email.');
     } finally {
@@ -82,7 +82,7 @@ const Register = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Credentials */}
+          
           <div>
             <h3 className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">1. Account Credentials</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -133,7 +133,7 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Section 2: Eligibility Criteria */}
+          
           <div>
             <h3 className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">2. Eligibility Screening Profile</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

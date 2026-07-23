@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { FileText, Download, RefreshCw, BarChart } from 'lucide-react';
 
@@ -29,14 +29,14 @@ const Reports = () => {
   const totalViews = schemes.reduce((acc, curr) => acc + (curr.viewsCount || 0), 0);
   const totalDownloads = schemes.reduce((acc, curr) => acc + (curr.downloadsCount || 0), 0);
 
-  // Generate CSV and trigger browser download
+  
   const downloadCSVReport = () => {
     if (schemes.length === 0) return;
 
-    // Headers
+    
     const headers = ['Scheme ID', 'Scheme Name', 'Category', 'Views', 'Downloads', 'Min Age Limit', 'Max Age Limit', 'Income Cap (Rs.)'];
     
-    // Rows
+    
     const rows = schemes.map(s => [
       s._id,
       `"${s.title.replace(/"/g, '""')}"`,
@@ -60,7 +60,7 @@ const Reports = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Generate plain text summary print report
+  
   const downloadTxtReport = () => {
     if (schemes.length === 0) return;
 
@@ -113,7 +113,7 @@ End of Panchayat Secretary Administration Report.
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-8">
-      {/* Header */}
+      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-400">
@@ -145,7 +145,7 @@ End of Panchayat Secretary Administration Report.
         </div>
       </div>
 
-      {/* Analytics Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass-card p-6 rounded-2xl flex flex-col justify-between border border-slate-800">
           <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Managed Schemes</span>
@@ -172,7 +172,7 @@ End of Panchayat Secretary Administration Report.
         </div>
       </div>
 
-      {/* Detailed performance list */}
+      
       <div className="glass-card p-6 rounded-3xl border border-slate-800">
         <h3 className="text-white font-bold text-base mb-4 flex items-center space-x-2">
           <BarChart className="h-4 w-4 text-emerald-400" />

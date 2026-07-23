@@ -1,10 +1,10 @@
-import React, { createContext, useState, useContext } from 'react';
+﻿import React, { createContext, useState, useContext } from 'react';
 
 const LanguageContext = createContext();
 
 const translations = {
   en: {
-    // Navbar
+    
     home: 'Home',
     schemes: 'Schemes',
     notices: 'Notices',
@@ -15,7 +15,7 @@ const translations = {
     profile: 'Profile',
     brand: 'Smart Panchayat',
 
-    // Hero
+    
     heroTagline: 'Notice: Livestock and Poultry scheme registrations are active.',
     heroTitle: 'Empowering Citizens with',
     heroTitleHighlight: 'Smart Panchayat Governance',
@@ -23,7 +23,7 @@ const translations = {
     exploreSchemes: 'Explore Schemes',
     checkEligibility: 'Check Eligibility',
 
-    // Home Page
+    
     important: 'Important',
     latestNotices: 'Latest Notices:',
     viewNoticeBoard: 'View Notice Board',
@@ -44,7 +44,7 @@ const translations = {
     assistanceDesc: 'If you require assistance in form filling, document collection, or offline verification, please visit the Panchayat Secretary desk between 10:00 AM and 2:00 PM on weekdays.',
     emailSupport: 'Email Support',
 
-    // Schemes Page
+    
     schemesTitle: 'Panchayat Welfare Schemes',
     schemesSubText: 'Explore official welfare assistance schemes, check criteria guidelines, and download forms.',
     interactiveScreening: 'Interactive Screening',
@@ -71,13 +71,13 @@ const translations = {
     closeBtn: 'Close',
     downloadFormBtn: 'Download Application Form',
 
-    // Announcements
+    
     announcementsTitle: 'Notice Board & Announcements',
     announcementsSubText: 'Official circulars, meeting notices, and updates from the Panchayat Secretary.',
     highPriority: 'High Priority'
   },
   ml: {
-    // Navbar
+    
     home: 'ഹോം',
     schemes: 'പദ്ധതികൾ',
     notices: 'അറിയിപ്പുകൾ',
@@ -88,7 +88,7 @@ const translations = {
     profile: 'പ്രൊഫൈൽ',
     brand: 'സ്മാർട്ട് പഞ്ചായത്ത്',
 
-    // Hero
+    
     heroTagline: 'അറിയിപ്പ്: കോഴി വളർത്തൽ, ആട് വളർത്തൽ രജിസ്ട്രേഷൻ ആരംഭിച്ചു.',
     heroTitle: 'ജനങ്ങളിലേക്ക് നേരിട്ട്',
     heroTitleHighlight: 'ഡിജിറ്റൽ പഞ്ചായത്ത് ഭരണസംവിധാനം',
@@ -96,7 +96,7 @@ const translations = {
     exploreSchemes: 'പദ്ധതികൾ കാണുക',
     checkEligibility: 'യോഗ്യത പരിശോധിക്കാം',
 
-    // Home Page
+    
     important: 'പ്രധാനം',
     latestNotices: 'അവസാന അറിയിപ്പുകൾ:',
     viewNoticeBoard: 'നോട്ടീസ് ബോർഡ് കാണാം',
@@ -117,7 +117,7 @@ const translations = {
     assistanceDesc: 'അപേക്ഷകൾ പൂരിപ്പിക്കുന്നതിനോ രേഖകൾ ശേഖരിക്കുന്നതിനോ സഹായം ആവശ്യമുണ്ടെങ്കിൽ പ്രവൃത്തിദിവസങ്ങളിൽ രാവിലെ 10 മുതൽ ഉച്ചയ്ക്ക് 2 വരെ സെക്രട്ടറി ഡെസ്ക് സന്ദർശിക്കുക.',
     emailSupport: 'ഇമെയിൽ ചെയ്യുക',
 
-    // Schemes Page
+    
     schemesTitle: 'പഞ്ചായത്ത് ക്ഷേമപദ്ധതികൾ',
     schemesSubText: 'വിവിധ ആനുകൂല്യങ്ങൾ കാണുക, യോഗ്യതകൾ മനസ്സിലാക്കുക, അപേക്ഷാ ഫോമുകൾ ഡൗൺലോഡ് ചെയ്യുക.',
     interactiveScreening: 'യോഗ്യതാ പരിശോധന',
@@ -144,7 +144,7 @@ const translations = {
     closeBtn: 'അടയ്ക്കുക',
     downloadFormBtn: 'അപേക്ഷാ ഫോം ഡൗൺലോഡ് ചെയ്യുക',
 
-    // Announcements
+    
     announcementsTitle: 'നോട്ടീസ് ബോർഡും അറിയിപ്പുകളും',
     announcementsSubText: 'പഞ്ചായത്തിൽ നിന്നുള്ള ഔദ്യോഗിക അറിയിപ്പുകളും ഗ്രാമസഭ വിവരങ്ങളും.',
     highPriority: 'അതിപ്രധാനം'

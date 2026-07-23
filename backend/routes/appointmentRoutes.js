@@ -1,23 +1,22 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+const { protect, admin } = require('../middleware/authMiddleware');
 const {
   bookAppointment,
   getMyAppointments,
   getAllAppointments,
   updateAppointment,
-  getBookedSlots
+  getBookedSlots,
+  cancelAppointment
 } = require('../controllers/appointmentController');
 
-// Public — check available slots for a date
 router.get('/booked-slots', getBookedSlots);
 
-// Citizen routes
 router.post('/', protect, bookAppointment);
 router.get('/my', protect, getMyAppointments);
+router.delete('/:id', protect, cancelAppointment);
 
-// Admin routes
-router.get('/', protect, adminOnly, getAllAppointments);
-router.put('/:id', protect, adminOnly, updateAppointment);
+router.get('/', protect, admin, getAllAppointments);
+router.put('/:id', protect, admin, updateAppointment);
 
 module.exports = router;

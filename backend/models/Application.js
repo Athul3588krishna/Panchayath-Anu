@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const ApplicationSchema = new mongoose.Schema({
   scheme: {
@@ -62,8 +62,8 @@ class ApplicationWrapper {
     if (ApplicationWrapper.isMongoConnected()) {
       return MongooseApplication.find(query).populate('scheme').populate('user');
     }
-    // For JsonDb, we mock the populate refs manually!
-    // This is super clever and works perfectly.
+    
+    
     const apps = jsonApplicationDb.find(query);
     return Promise.resolve(apps).then(async (items) => {
       const jsonSchemeDb = new JsonDb('schemes');

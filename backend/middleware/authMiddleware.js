@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
@@ -15,15 +15,15 @@ const protect = async (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
-      next();
+      return next();
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      console.error('Token verification error:', error.message);
+      return res.status(401).json({ message: 'Not authorized, token failed or expired' });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token provided' });
+    return res.status(401).json({ message: 'Not authorized, no token provided' });
   }
 };
 
@@ -35,4 +35,6 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+const adminOnly = admin;
+
+module.exports = { protect, admin, adminOnly };
